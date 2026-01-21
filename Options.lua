@@ -52,7 +52,7 @@ end
 -- Create the main configuration panel
 local function CreateConfigPanel()
     local frame = CreateFrame("Frame", "ExtraBarsConfigPanel", UIParent, "BackdropTemplate")
-    frame:SetSize(330, 580)
+    frame:SetSize(330, 630)
     frame:SetPoint("LEFT", 20, 0)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
