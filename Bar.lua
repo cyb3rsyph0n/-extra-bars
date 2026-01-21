@@ -324,37 +324,33 @@ function ExtraBars:UpdateBar(barID)
         button.itemID = item.id
         button.itemType = item.type
         
-        -- Position button in grid based on direction
+        -- Position button in grid based on anchor
         local row = math.floor((buttonIndex - 1) / cols)
         local col = (buttonIndex - 1) % cols
-        local direction = barData.direction or "RIGHT"
+        local anchor = barData.anchor or "TOPLEFT"
         local xOffset, yOffset
-        local anchorPoint, anchorTo
+        local anchorPoint
         
-        if direction == "RIGHT" then
+        if anchor == "TOPLEFT" then
             xOffset = col * (iconSize + padding) + padding
             yOffset = -row * (iconSize + padding) - padding
             anchorPoint = "TOPLEFT"
-            anchorTo = "TOPLEFT"
-        elseif direction == "LEFT" then
+        elseif anchor == "TOPRIGHT" then
             xOffset = -col * (iconSize + padding) - padding
             yOffset = -row * (iconSize + padding) - padding
             anchorPoint = "TOPRIGHT"
-            anchorTo = "TOPRIGHT"
-        elseif direction == "UP" then
+        elseif anchor == "BOTTOMLEFT" then
             xOffset = col * (iconSize + padding) + padding
             yOffset = row * (iconSize + padding) + padding
             anchorPoint = "BOTTOMLEFT"
-            anchorTo = "BOTTOMLEFT"
-        elseif direction == "DOWN" then
-            xOffset = col * (iconSize + padding) + padding
-            yOffset = -row * (iconSize + padding) - padding
-            anchorPoint = "TOPLEFT"
-            anchorTo = "TOPLEFT"
+        elseif anchor == "BOTTOMRIGHT" then
+            xOffset = -col * (iconSize + padding) - padding
+            yOffset = row * (iconSize + padding) + padding
+            anchorPoint = "BOTTOMRIGHT"
         end
         
         button:ClearAllPoints()
-        button:SetPoint(anchorPoint, bar, anchorTo, xOffset, yOffset)
+        button:SetPoint(anchorPoint, bar, anchor, xOffset, yOffset)
         
         -- Set up button attributes and visuals
         if item.type == "SPELL" then
@@ -498,30 +494,25 @@ function ExtraBars:UpdateBarCooldownsAndCounts(barID)
     end
 end
 
--- Get the anchor point based on direction setting
-function ExtraBars:GetAnchorForDirection(direction)
-    if direction == "RIGHT" then
-        return "TOPLEFT", "TOPLEFT"
-    elseif direction == "LEFT" then
-        return "TOPRIGHT", "TOPRIGHT"
-    elseif direction == "UP" then
-        return "BOTTOMLEFT", "BOTTOMLEFT"
-    elseif direction == "DOWN" then
-        return "TOPLEFT", "TOPLEFT"
+-- Get the anchor point based on anchor setting
+function ExtraBars:GetAnchorPoint(anchor)
+    -- Anchor is already the point name
+    if anchor == "TOPLEFT" or anchor == "TOPRIGHT" or anchor == "BOTTOMLEFT" or anchor == "BOTTOMRIGHT" then
+        return anchor
     end
-    return "TOPLEFT", "TOPLEFT" -- Default
+    return "TOPLEFT" -- Default
 end
 
--- Save bar position after dragging (using direction-aware anchor)
+-- Save bar position after dragging (using anchor-aware positioning)
 function ExtraBars:SaveBarPosition(barID)
     local barData = self.db.bars[barID]
     local bar = self.barFrames[barID]
     
     if not barData or not bar then return end
     
-    -- Get the appropriate anchor point for the bar's direction
-    local direction = barData.direction or "RIGHT"
-    local anchorPoint = self:GetAnchorForDirection(direction)
+    -- Get the appropriate anchor point for the bar's anchor setting
+    local anchor = barData.anchor or "TOPLEFT"
+    local anchorPoint = self:GetAnchorPoint(anchor)
     
     -- Get the bar's current position in screen coordinates
     local left, bottom, width, height = bar:GetRect()
@@ -555,23 +546,22 @@ function ExtraBars:SaveBarPosition(barID)
     }
 end
 
--- Update bar position based on saved position (direction-aware)
+-- Update bar position based on saved position (anchor-aware)
 function ExtraBars:UpdateBarPosition(barID)
     local barData = self.db.bars[barID]
     local bar = self.barFrames[barID]
     
     if not barData or not bar then return end
     
-    -- Get the appropriate anchor for the current direction
-    local direction = barData.direction or "RIGHT"
-    local anchorPoint = self:GetAnchorForDirection(direction)
+    -- Get the appropriate anchor for the current anchor setting
+    local anchor = barData.anchor or "TOPLEFT"
+    local anchorPoint = self:GetAnchorPoint(anchor)
     
     bar:ClearAllPoints()
     
     local pos = barData.position
     
-    -- If saved anchor doesn't match current direction, use saved position but convert
-    -- Otherwise just apply the saved position
+    -- Apply the saved position using the anchor point
     bar:SetPoint(anchorPoint, UIParent, anchorPoint, pos.xOffset, pos.yOffset)
 end
 

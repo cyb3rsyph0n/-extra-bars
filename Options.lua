@@ -230,35 +230,35 @@ local function CreateConfigPanel()
     
     settingsY = settingsY - 50
     
-    -- Direction dropdown
-    local dirLabel = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dirLabel:SetPoint("TOPLEFT", 20, settingsY)
-    dirLabel:SetText("Direction:")
+    -- Anchor dropdown
+    local anchorLabel = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    anchorLabel:SetPoint("TOPLEFT", 20, settingsY)
+    anchorLabel:SetText("Anchor:")
     
-    frame.dirDropdown = CreateFrame("Frame", "EBDirectionDropdown", frame.settingsFrame, "UIDropDownMenuTemplate")
-    frame.dirDropdown:SetPoint("TOPLEFT", 70, settingsY + 5)
-    UIDropDownMenu_SetWidth(frame.dirDropdown, 100)
+    frame.anchorDropdown = CreateFrame("Frame", "EBAnchorDropdown", frame.settingsFrame, "UIDropDownMenuTemplate")
+    frame.anchorDropdown:SetPoint("TOPLEFT", 70, settingsY + 5)
+    UIDropDownMenu_SetWidth(frame.anchorDropdown, 120)
     
-    local directions = {
-        { value = "RIGHT", text = "Right" },
-        { value = "LEFT", text = "Left" },
-        { value = "UP", text = "Up" },
-        { value = "DOWN", text = "Down" },
+    local anchors = {
+        { value = "TOPLEFT", text = "Top Left" },
+        { value = "TOPRIGHT", text = "Top Right" },
+        { value = "BOTTOMLEFT", text = "Bottom Left" },
+        { value = "BOTTOMRIGHT", text = "Bottom Right" },
     }
     
-    local function InitDirectionDropdown(self, level)
-        for _, dir in ipairs(directions) do
+    local function InitAnchorDropdown(self, level)
+        for _, anch in ipairs(anchors) do
             local info = UIDropDownMenu_CreateInfo()
-            info.text = dir.text
-            info.value = dir.value
+            info.text = anch.text
+            info.value = anch.value
             info.func = function()
                 local barID = ExtraBars.selectedBarID
                 if barID and ExtraBars.db.bars[barID] then
-                    -- Save current position before changing direction
+                    -- Save current position before changing anchor
                     ExtraBars:SaveBarPosition(barID)
-                    -- Change direction
-                    ExtraBars.db.bars[barID].direction = dir.value
-                    UIDropDownMenu_SetText(frame.dirDropdown, dir.text)
+                    -- Change anchor
+                    ExtraBars.db.bars[barID].anchor = anch.value
+                    UIDropDownMenu_SetText(frame.anchorDropdown, anch.text)
                     -- Update bar layout and reposition with new anchor
                     ExtraBars:UpdateBar(barID)
                     ExtraBars:UpdateBarPosition(barID)
@@ -266,13 +266,13 @@ local function CreateConfigPanel()
             end
             info.checked = function()
                 local barID = ExtraBars.selectedBarID
-                return barID and ExtraBars.db.bars[barID] and ExtraBars.db.bars[barID].direction == dir.value
+                return barID and ExtraBars.db.bars[barID] and ExtraBars.db.bars[barID].anchor == anch.value
             end
             UIDropDownMenu_AddButton(info, level)
         end
     end
     
-    UIDropDownMenu_Initialize(frame.dirDropdown, InitDirectionDropdown)
+    UIDropDownMenu_Initialize(frame.anchorDropdown, InitAnchorDropdown)
     
     settingsY = settingsY - 35
     
@@ -523,10 +523,10 @@ function ExtraBars:UpdateConfigPanel()
     panel.rowsContainer.slider:SetValue(barData.rows)
     panel.colsContainer.slider:SetValue(barData.cols)
     
-    -- Update direction dropdown
-    local directionLabels = { RIGHT = "Right", LEFT = "Left", UP = "Up", DOWN = "Down" }
-    local currentDir = barData.direction or "RIGHT"
-    UIDropDownMenu_SetText(panel.dirDropdown, directionLabels[currentDir] or "Right")
+    -- Update anchor dropdown
+    local anchorLabels = { TOPLEFT = "Top Left", TOPRIGHT = "Top Right", BOTTOMLEFT = "Bottom Left", BOTTOMRIGHT = "Bottom Right" }
+    local currentAnchor = barData.anchor or "TOPLEFT"
+    UIDropDownMenu_SetText(panel.anchorDropdown, anchorLabels[currentAnchor] or "Top Left")
     
     -- Update category checkboxes
     for catKey, btn in pairs(panel.categoryButtons) do
