@@ -22,6 +22,7 @@ ExtraBars.barDefaults = {
     iconPadding = 2,
     rows = 1,
     cols = 12,
+    direction = "RIGHT", -- RIGHT, LEFT, UP, DOWN
     categories = {}, -- List of category keys in order
     position = {
         point = "CENTER",

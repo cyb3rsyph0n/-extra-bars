@@ -184,57 +184,55 @@ ExtraBars.Categories = {
     HEALTH_POTIONS = {
         name = "Health Potions",
         type = "ITEM",
+        showBestOnly = true, -- Only show the best available healing potion
         items = {
-            -- The War Within Health Potions (all ranks)
-            { id = 211878, name = "Invigorating Healing Potion" },
-            { id = 211879, name = "Invigorating Healing Potion R2" },
-            { id = 211880, name = "Invigorating Healing Potion R3" },
-            { id = 212239, name = "Algari Healing Potion" },
-            { id = 212240, name = "Algari Healing Potion R2" },
-            { id = 212241, name = "Algari Healing Potion R3" },
-            { id = 212234, name = "Cavedweller's Delight" },
-            { id = 212235, name = "Cavedweller's Delight R2" },
-            { id = 212236, name = "Cavedweller's Delight R3" },
-            { id = 212237, name = "Slumbering Soul Serum" },
-            { id = 212238, name = "Slumbering Soul Serum R2" },
-            { id = 212242, name = "Slumbering Soul Serum R3" },
+            -- The War Within Health Potions (all ranks) - priority determines which is "best"
+            { id = 211878, name = "Invigorating Healing Potion", priority = 100, group = "invigorating" },
+            { id = 211879, name = "Invigorating Healing Potion R2", priority = 101, group = "invigorating" },
+            { id = 211880, name = "Invigorating Healing Potion R3", priority = 102, group = "invigorating" },
+            { id = 212239, name = "Algari Healing Potion", priority = 90, group = "algari" },
+            { id = 212240, name = "Algari Healing Potion R2", priority = 91, group = "algari" },
+            { id = 212241, name = "Algari Healing Potion R3", priority = 92, group = "algari" },
+            { id = 212234, name = "Cavedweller's Delight", priority = 80, group = "cavedweller" },
+            { id = 212235, name = "Cavedweller's Delight R2", priority = 81, group = "cavedweller" },
+            { id = 212236, name = "Cavedweller's Delight R3", priority = 82, group = "cavedweller" },
+            { id = 212237, name = "Slumbering Soul Serum", priority = 70, group = "slumbering" },
+            { id = 212238, name = "Slumbering Soul Serum R2", priority = 71, group = "slumbering" },
+            { id = 212242, name = "Slumbering Soul Serum R3", priority = 72, group = "slumbering" },
             -- TWW Warband versions
-            { id = 224464, name = "Algari Healing Potion (Warband)" },
+            { id = 224464, name = "Algari Healing Potion (Warband)", priority = 93, group = "algari" },
             
             -- Dragonflight Health Potions
-            { id = 191378, name = "Refreshing Healing Potion" },
-            { id = 191379, name = "Refreshing Healing Potion R2" },
-            { id = 191380, name = "Refreshing Healing Potion R3" },
-            { id = 207023, name = "Dreamwalker's Healing Potion" },
-            { id = 207039, name = "Dreamwalker's Healing Potion R2" },
-            { id = 207040, name = "Dreamwalker's Healing Potion R3" },
+            { id = 191378, name = "Refreshing Healing Potion", priority = 60, group = "refreshing" },
+            { id = 191379, name = "Refreshing Healing Potion R2", priority = 61, group = "refreshing" },
+            { id = 191380, name = "Refreshing Healing Potion R3", priority = 62, group = "refreshing" },
+            { id = 207023, name = "Dreamwalker's Healing Potion", priority = 65, group = "dreamwalker" },
+            { id = 207039, name = "Dreamwalker's Healing Potion R2", priority = 66, group = "dreamwalker" },
+            { id = 207040, name = "Dreamwalker's Healing Potion R3", priority = 67, group = "dreamwalker" },
             
             -- Shadowlands Health Potions
-            { id = 171267, name = "Spiritual Healing Potion" },
-            { id = 187802, name = "Cosmic Healing Potion" },
+            { id = 171267, name = "Spiritual Healing Potion", priority = 50, group = "spiritual" },
+            { id = 187802, name = "Cosmic Healing Potion", priority = 55, group = "cosmic" },
             
             -- Battle for Azeroth Health Potions
-            { id = 169451, name = "Abyssal Healing Potion" },
-            { id = 152494, name = "Coastal Healing Potion" },
+            { id = 169451, name = "Abyssal Healing Potion", priority = 45, group = "abyssal" },
+            { id = 152494, name = "Coastal Healing Potion", priority = 40, group = "coastal" },
             
             -- Legion Health Potions
-            { id = 127834, name = "Ancient Healing Potion" },
-            { id = 127835, name = "Ancient Rejuvenation Potion" },
+            { id = 127834, name = "Ancient Healing Potion", priority = 35, group = "ancient" },
+            { id = 127835, name = "Ancient Rejuvenation Potion", priority = 36, group = "ancient_rejuv" },
             
             -- Classic/Generic Health Potions
-            { id = 118, name = "Minor Healing Potion" },
-            { id = 858, name = "Lesser Healing Potion" },
-            { id = 929, name = "Healing Potion" },
-            { id = 1710, name = "Greater Healing Potion" },
-            { id = 3928, name = "Superior Healing Potion" },
-            { id = 13446, name = "Major Healing Potion" },
-            { id = 33447, name = "Runic Healing Potion" },
+            { id = 118, name = "Minor Healing Potion", priority = 1, group = "minor" },
+            { id = 858, name = "Lesser Healing Potion", priority = 5, group = "lesser" },
+            { id = 929, name = "Healing Potion", priority = 10, group = "basic" },
+            { id = 1710, name = "Greater Healing Potion", priority = 15, group = "greater" },
+            { id = 3928, name = "Superior Healing Potion", priority = 20, group = "superior" },
+            { id = 13446, name = "Major Healing Potion", priority = 25, group = "major" },
+            { id = 33447, name = "Runic Healing Potion", priority = 30, group = "runic" },
             
-            -- Healthstones (Warlock)
-            { id = 5512, name = "Healthstone" },
-            
-            -- Warband Health Potions (shared account-wide)
-            { id = 224464, name = "Algari Healing Potion" },
+            -- Healthstones (Warlock) - Always show separately
+            { id = 5512, name = "Healthstone", priority = 200, group = "healthstone" },
         },
     },
     
@@ -353,6 +351,7 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
     if not category then return {} end
     
     local available = {}
+    local bestByGroup = {} -- Track best item per group for showBestOnly categories
     
     for _, item in ipairs(category.items) do
         local isAvailable = false
@@ -364,11 +363,35 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
         end
         
         if isAvailable then
-            table.insert(available, {
+            local itemData = {
                 id = item.id,
                 name = item.name,
                 type = category.type,
-            })
+                priority = item.priority or 0,
+                group = item.group,
+            }
+            
+            -- If this category shows best only, track by group
+            if category.showBestOnly and item.group then
+                if not bestByGroup[item.group] or itemData.priority > bestByGroup[item.group].priority then
+                    bestByGroup[item.group] = itemData
+                end
+            else
+                table.insert(available, itemData)
+            end
+        end
+    end
+    
+    -- For showBestOnly categories, find the single best item across all groups
+    if category.showBestOnly then
+        local bestItem = nil
+        for _, item in pairs(bestByGroup) do
+            if not bestItem or item.priority > bestItem.priority then
+                bestItem = item
+            end
+        end
+        if bestItem then
+            table.insert(available, bestItem)
         end
     end
     

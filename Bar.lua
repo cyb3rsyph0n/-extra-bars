@@ -315,14 +315,37 @@ function ExtraBars:UpdateBar(barID)
         button.itemID = item.id
         button.itemType = item.type
         
-        -- Position button in grid
+        -- Position button in grid based on direction
         local row = math.floor((buttonIndex - 1) / cols)
         local col = (buttonIndex - 1) % cols
-        local xOffset = col * (iconSize + padding)
-        local yOffset = -row * (iconSize + padding)
+        local direction = barData.direction or "RIGHT"
+        local xOffset, yOffset
+        local anchorPoint, anchorTo
+        
+        if direction == "RIGHT" then
+            xOffset = col * (iconSize + padding) + padding
+            yOffset = -row * (iconSize + padding) - padding
+            anchorPoint = "TOPLEFT"
+            anchorTo = "TOPLEFT"
+        elseif direction == "LEFT" then
+            xOffset = -col * (iconSize + padding) - padding
+            yOffset = -row * (iconSize + padding) - padding
+            anchorPoint = "TOPRIGHT"
+            anchorTo = "TOPRIGHT"
+        elseif direction == "UP" then
+            xOffset = col * (iconSize + padding) + padding
+            yOffset = row * (iconSize + padding) + padding
+            anchorPoint = "BOTTOMLEFT"
+            anchorTo = "BOTTOMLEFT"
+        elseif direction == "DOWN" then
+            xOffset = col * (iconSize + padding) + padding
+            yOffset = -row * (iconSize + padding) - padding
+            anchorPoint = "TOPLEFT"
+            anchorTo = "TOPLEFT"
+        end
         
         button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", bar, "TOPLEFT", xOffset + padding, yOffset - padding)
+        button:SetPoint(anchorPoint, bar, anchorTo, xOffset, yOffset)
         
         -- Set up button attributes and visuals
         if item.type == "SPELL" then

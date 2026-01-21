@@ -203,7 +203,48 @@ local function CreateConfigPanel()
         end
     end)
     
-    settingsY = settingsY - 55
+    settingsY = settingsY - 50
+    
+    -- Direction dropdown
+    local dirLabel = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dirLabel:SetPoint("TOPLEFT", 20, settingsY)
+    dirLabel:SetText("Direction:")
+    
+    frame.dirDropdown = CreateFrame("Frame", "EBDirectionDropdown", frame.settingsFrame, "UIDropDownMenuTemplate")
+    frame.dirDropdown:SetPoint("TOPLEFT", 70, settingsY + 5)
+    UIDropDownMenu_SetWidth(frame.dirDropdown, 100)
+    
+    local directions = {
+        { value = "RIGHT", text = "Right" },
+        { value = "LEFT", text = "Left" },
+        { value = "UP", text = "Up" },
+        { value = "DOWN", text = "Down" },
+    }
+    
+    local function InitDirectionDropdown(self, level)
+        for _, dir in ipairs(directions) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = dir.text
+            info.value = dir.value
+            info.func = function()
+                local barID = ExtraBars.selectedBarID
+                if barID and ExtraBars.db.bars[barID] then
+                    ExtraBars.db.bars[barID].direction = dir.value
+                    UIDropDownMenu_SetText(frame.dirDropdown, dir.text)
+                    ExtraBars:UpdateBar(barID)
+                end
+            end
+            info.checked = function()
+                local barID = ExtraBars.selectedBarID
+                return barID and ExtraBars.db.bars[barID] and ExtraBars.db.bars[barID].direction == dir.value
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end
+    
+    UIDropDownMenu_Initialize(frame.dirDropdown, InitDirectionDropdown)
+    
+    settingsY = settingsY - 35
     
     -- Categories section
     local catTitle = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -445,6 +486,11 @@ function ExtraBars:UpdateConfigPanel()
     panel.paddingContainer.slider:SetValue(barData.iconPadding)
     panel.rowsContainer.slider:SetValue(barData.rows)
     panel.colsContainer.slider:SetValue(barData.cols)
+    
+    -- Update direction dropdown
+    local directionLabels = { RIGHT = "Right", LEFT = "Left", UP = "Up", DOWN = "Down" }
+    local currentDir = barData.direction or "RIGHT"
+    UIDropDownMenu_SetText(panel.dirDropdown, directionLabels[currentDir] or "Right")
     
     -- Update category checkboxes
     for catKey, btn in pairs(panel.categoryButtons) do
