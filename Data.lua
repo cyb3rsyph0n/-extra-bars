@@ -322,6 +322,14 @@ ExtraBars.Categories = {
             { id = 194825, name = "Hissing Rune" },
         },
     },
+    
+    -- Equipped Trinkets (on-use only)
+    TRINKETS = {
+        name = "Trinkets",
+        type = "EQUIPPED",
+        slots = { 13, 14 }, -- Trinket slot IDs
+        items = {}, -- Dynamically populated from equipped items
+    },
 }
 
 -- Category display order
@@ -333,11 +341,42 @@ ExtraBars.CategoryOrder = {
     "HEALTH_POTIONS",
     "COMBAT_POTIONS",
     "UTILITY",
+    "TRINKETS",
 }
 
 -- Helper function to check if player knows a spell
 function ExtraBars:PlayerKnowsSpell(spellID)
     return IsSpellKnown(spellID) or IsPlayerSpell(spellID)
+end
+
+-- Helper function to check if an item has an on-use effect
+function ExtraBars:ItemHasOnUse(itemID)
+    if not itemID then return false end
+    local spellName = GetItemSpell(itemID)
+    return spellName ~= nil
+end
+
+-- Helper function to get equipped trinkets with on-use effects
+function ExtraBars:GetEquippedOnUseTrinkets()
+    local trinkets = {}
+    local slots = { 13, 14 } -- Trinket 1 and Trinket 2
+    
+    for _, slotID in ipairs(slots) do
+        local itemID = GetInventoryItemID("player", slotID)
+        if itemID and self:ItemHasOnUse(itemID) then
+            local itemName = C_Item.GetItemInfo(itemID)
+            if itemName then
+                table.insert(trinkets, {
+                    id = itemID,
+                    name = itemName,
+                    type = "ITEM",
+                    slotID = slotID,
+                })
+            end
+        end
+    end
+    
+    return trinkets
 end
 
 -- Helper function to check if player has an item
@@ -349,6 +388,11 @@ end
 function ExtraBars:GetAvailableItemsForCategory(categoryKey)
     local category = self.Categories[categoryKey]
     if not category then return {} end
+    
+    -- Handle equipped items (trinkets)
+    if category.type == "EQUIPPED" then
+        return self:GetEquippedOnUseTrinkets()
+    end
     
     local available = {}
     local bestByGroup = {} -- Track best item per group for showBestOnly categories

@@ -357,25 +357,39 @@ function ExtraBars:UpdateBar(barID)
                 button.icon:SetTexture(spellInfo.iconID)
             end
             button.count:SetText("")
+            button.slotID = nil
             
             -- Update cooldown
             self:UpdateButtonCooldown(button, "SPELL", item.id)
             
         elseif item.type == "ITEM" then
-            button:SetAttribute("type", "item")
-            button:SetAttribute("item", "item:" .. item.id)
+            -- Check if this is an equipped item (trinket)
+            if item.slotID then
+                -- Use slot-based action for equipped items
+                button:SetAttribute("type", "macro")
+                button:SetAttribute("macrotext", "/use " .. item.slotID)
+                button.slotID = item.slotID
+            else
+                button:SetAttribute("type", "item")
+                button:SetAttribute("item", "item:" .. item.id)
+                button.slotID = nil
+            end
             
             local itemIcon = C_Item.GetItemIconByID(item.id)
             if itemIcon then
                 button.icon:SetTexture(itemIcon)
             end
             
-            -- Update count
-            local count = C_Item.GetItemCount(item.id, true, false)
-            if count > 1 then
-                button.count:SetText(count)
-            else
+            -- Update count (don't show for equipped items)
+            if item.slotID then
                 button.count:SetText("")
+            else
+                local count = C_Item.GetItemCount(item.id, true, false)
+                if count > 1 then
+                    button.count:SetText(count)
+                else
+                    button.count:SetText("")
+                end
             end
             
             -- Update cooldown

@@ -37,6 +37,7 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
@@ -45,6 +46,12 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
         ExtraBars:OnPlayerLogin()
     elseif event == "PLAYER_ENTERING_WORLD" then
         ExtraBars:UpdateAllBars()
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
+        -- arg1 is the equipment slot that changed
+        -- Trinket slots are 13 and 14
+        if arg1 == 13 or arg1 == 14 then
+            ExtraBars:UpdateAllBars()
+        end
     end
 end)
 
