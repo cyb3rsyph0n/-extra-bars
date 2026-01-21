@@ -498,34 +498,81 @@ function ExtraBars:UpdateBarCooldownsAndCounts(barID)
     end
 end
 
--- Save bar position after dragging
+-- Get the anchor point based on direction setting
+function ExtraBars:GetAnchorForDirection(direction)
+    if direction == "RIGHT" then
+        return "TOPLEFT", "TOPLEFT"
+    elseif direction == "LEFT" then
+        return "TOPRIGHT", "TOPRIGHT"
+    elseif direction == "UP" then
+        return "BOTTOMLEFT", "BOTTOMLEFT"
+    elseif direction == "DOWN" then
+        return "TOPLEFT", "TOPLEFT"
+    end
+    return "TOPLEFT", "TOPLEFT" -- Default
+end
+
+-- Save bar position after dragging (using direction-aware anchor)
 function ExtraBars:SaveBarPosition(barID)
     local barData = self.db.bars[barID]
     local bar = self.barFrames[barID]
     
     if not barData or not bar then return end
     
-    local point, relativeTo, relativePoint, xOfs, yOfs = bar:GetPoint()
+    -- Get the appropriate anchor point for the bar's direction
+    local direction = barData.direction or "RIGHT"
+    local anchorPoint = self:GetAnchorForDirection(direction)
+    
+    -- Get the bar's current position in screen coordinates
+    local left, bottom, width, height = bar:GetRect()
+    if not left then return end
+    
+    local screenWidth = GetScreenWidth()
+    local screenHeight = GetScreenHeight()
+    local scale = bar:GetEffectiveScale()
+    
+    -- Calculate position relative to UIParent based on anchor point
+    local xOfs, yOfs
+    if anchorPoint == "TOPLEFT" then
+        xOfs = left * scale
+        yOfs = (bottom + height) * scale - screenHeight
+    elseif anchorPoint == "TOPRIGHT" then
+        xOfs = (left + width) * scale - screenWidth
+        yOfs = (bottom + height) * scale - screenHeight
+    elseif anchorPoint == "BOTTOMLEFT" then
+        xOfs = left * scale
+        yOfs = bottom * scale
+    elseif anchorPoint == "BOTTOMRIGHT" then
+        xOfs = (left + width) * scale - screenWidth
+        yOfs = bottom * scale
+    end
     
     barData.position = {
-        point = point,
-        relativePoint = relativePoint,
+        point = anchorPoint,
+        relativePoint = anchorPoint,
         xOffset = xOfs,
         yOffset = yOfs,
     }
 end
 
--- Update bar position based on saved position
+-- Update bar position based on saved position (direction-aware)
 function ExtraBars:UpdateBarPosition(barID)
     local barData = self.db.bars[barID]
     local bar = self.barFrames[barID]
     
     if not barData or not bar then return end
     
+    -- Get the appropriate anchor for the current direction
+    local direction = barData.direction or "RIGHT"
+    local anchorPoint = self:GetAnchorForDirection(direction)
+    
     bar:ClearAllPoints()
     
     local pos = barData.position
-    bar:SetPoint(pos.point, UIParent, pos.relativePoint, pos.xOffset, pos.yOffset)
+    
+    -- If saved anchor doesn't match current direction, use saved position but convert
+    -- Otherwise just apply the saved position
+    bar:SetPoint(anchorPoint, UIParent, anchorPoint, pos.xOffset, pos.yOffset)
 end
 
 -- Register events for bar updates

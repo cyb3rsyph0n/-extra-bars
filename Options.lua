@@ -254,9 +254,14 @@ local function CreateConfigPanel()
             info.func = function()
                 local barID = ExtraBars.selectedBarID
                 if barID and ExtraBars.db.bars[barID] then
+                    -- Save current position before changing direction
+                    ExtraBars:SaveBarPosition(barID)
+                    -- Change direction
                     ExtraBars.db.bars[barID].direction = dir.value
                     UIDropDownMenu_SetText(frame.dirDropdown, dir.text)
+                    -- Update bar layout and reposition with new anchor
                     ExtraBars:UpdateBar(barID)
+                    ExtraBars:UpdateBarPosition(barID)
                 end
             end
             info.checked = function()
