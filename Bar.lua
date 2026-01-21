@@ -527,36 +527,49 @@ function ExtraBars:SaveBarPosition(barID)
     -- Get the appropriate anchor point for the bar's anchor setting
     local anchorPoint = self:GetAnchorPoint(barData.anchor)
     
-    -- Get the bar's current position in screen coordinates
-    local left, bottom, width, height = bar:GetRect()
-    if not left then return end
+    -- Get the current anchor point info from the frame
+    local point, relativeTo, relativePoint, xOfs, yOfs = bar:GetPoint(1)
+    if not point then return end
     
-    local screenWidth = GetScreenWidth()
-    local screenHeight = GetScreenHeight()
-    local scale = bar:GetEffectiveScale()
-    
-    -- Calculate position relative to UIParent based on anchor point
-    local xOfs, yOfs
-    if anchorPoint == "TOPLEFT" then
-        xOfs = left * scale
-        yOfs = (bottom + height) * scale - screenHeight
-    elseif anchorPoint == "TOPRIGHT" then
-        xOfs = (left + width) * scale - screenWidth
-        yOfs = (bottom + height) * scale - screenHeight
-    elseif anchorPoint == "BOTTOMLEFT" then
-        xOfs = left * scale
-        yOfs = bottom * scale
-    elseif anchorPoint == "BOTTOMRIGHT" then
-        xOfs = (left + width) * scale - screenWidth
-        yOfs = bottom * scale
+    -- If the current point matches our desired anchor, just save it directly
+    if point == anchorPoint then
+        barData.position = {
+            point = point,
+            relativePoint = relativePoint,
+            xOffset = xOfs,
+            yOffset = yOfs,
+        }
+    else
+        -- Convert position from current point to desired anchor point
+        local left, bottom, width, height = bar:GetRect()
+        if not left then return end
+        
+        local screenWidth = UIParent:GetWidth()
+        local screenHeight = UIParent:GetHeight()
+        
+        -- Calculate new offsets based on desired anchor
+        local newXOfs, newYOfs
+        if anchorPoint == "TOPLEFT" then
+            newXOfs = left
+            newYOfs = (bottom + height) - screenHeight
+        elseif anchorPoint == "TOPRIGHT" then
+            newXOfs = (left + width) - screenWidth
+            newYOfs = (bottom + height) - screenHeight
+        elseif anchorPoint == "BOTTOMLEFT" then
+            newXOfs = left
+            newYOfs = bottom
+        elseif anchorPoint == "BOTTOMRIGHT" then
+            newXOfs = (left + width) - screenWidth
+            newYOfs = bottom
+        end
+        
+        barData.position = {
+            point = anchorPoint,
+            relativePoint = anchorPoint,
+            xOffset = newXOfs,
+            yOffset = newYOfs,
+        }
     end
-    
-    barData.position = {
-        point = anchorPoint,
-        relativePoint = anchorPoint,
-        xOffset = xOfs,
-        yOffset = yOfs,
-    }
 end
 
 -- Update bar position based on saved position (anchor-aware)
@@ -572,6 +585,13 @@ function ExtraBars:UpdateBarPosition(barID)
     bar:ClearAllPoints()
     
     local pos = barData.position
+    
+    -- Ensure position data exists and has valid values
+    if not pos or pos.xOffset == nil or pos.yOffset == nil then
+        -- Use default centered position if no valid position saved
+        pos = self:GetDefaultPosition()
+        barData.position = pos
+    end
     
     -- Apply the saved position using the anchor point
     bar:SetPoint(anchorPoint, UIParent, anchorPoint, pos.xOffset, pos.yOffset)
