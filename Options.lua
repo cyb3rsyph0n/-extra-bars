@@ -595,9 +595,9 @@ function ExtraBars:ShowConfigPanel(barID)
         end
     end
     
-    -- Select the specified bar
+    -- Set the selected bar directly (don't call SelectBar to avoid recursion)
     if barID then
-        self:SelectBar(barID)
+        self.selectedBarID = barID
     end
     
     self.configPanel:Show()
