@@ -117,6 +117,14 @@ function ExtraBars:RegisterBarWithEditMode(barID, bar)
     -- Initially hide - shown only in Edit Mode
     selection:Hide()
     
+    -- If we're already in edit mode, show the selection frame immediately
+    if self:IsEditModeActive() then
+        selection:Show()
+        bar.label:Show()
+        bar:SetBackdropColor(0, 0, 0, 0.3)
+        bar:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+    end
+    
     -- Hook into Edit Mode events
     if not self.editModeHooked then
         self:HookEditModeEvents()
