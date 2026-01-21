@@ -1,0 +1,12 @@
+## Interface: 120000
+## Title: !ExtraBars
+## Notes: Create customizable extra bars for tracking Racials, Consumables, and more
+## Author: Player
+## Version: 1.0.0
+## SavedVariables: ExtraBarsDB
+## IconTexture: Interface\Icons\INV_Misc_Bag_10
+
+Core.lua
+Data.lua
+Bar.lua
+Options.lua
