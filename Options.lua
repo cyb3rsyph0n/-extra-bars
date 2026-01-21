@@ -138,7 +138,32 @@ local function CreateConfigPanel()
     enabledLabel:SetPoint("LEFT", frame.enabledCheck, "RIGHT", 2, 0)
     enabledLabel:SetText("Enabled")
     
-    settingsY = settingsY - 35
+    settingsY = settingsY - 30
+    
+    -- Bar Name input
+    local nameLabel = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    nameLabel:SetPoint("TOPLEFT", 20, settingsY)
+    nameLabel:SetText("Bar Name:")
+    
+    frame.nameEditBox = CreateFrame("EditBox", "EBBarNameEditBox", frame.settingsFrame, "InputBoxTemplate")
+    frame.nameEditBox:SetSize(180, 20)
+    frame.nameEditBox:SetPoint("TOPLEFT", 90, settingsY + 3)
+    frame.nameEditBox:SetAutoFocus(false)
+    frame.nameEditBox:SetMaxLetters(30)
+    frame.nameEditBox:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+        local barID = ExtraBars.selectedBarID
+        if barID and ExtraBars.db.bars[barID] then
+            ExtraBars.db.bars[barID].name = self:GetText()
+            ExtraBars:UpdateBar(barID)
+            ExtraBars:RefreshBarList()
+        end
+    end)
+    frame.nameEditBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+    end)
+    
+    settingsY = settingsY - 30
     
     -- Layout section
     local layoutTitle = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -440,15 +465,20 @@ function ExtraBars:RefreshBarList()
             UIDropDownMenu_AddButton(sepInfo, level)
         end
         
-        -- List existing bars
-        local barCount = 0
-        for barID, barData in pairs(ExtraBars.db.bars) do
-            barCount = barCount + 1
+        -- List existing bars (sorted by barID)
+        local sortedBarIDs = {}
+        for barID in pairs(ExtraBars.db.bars) do
+            table.insert(sortedBarIDs, barID)
+        end
+        table.sort(sortedBarIDs)
+        
+        for _, barID in ipairs(sortedBarIDs) do
+            local displayName = ExtraBars:GetBarDisplayName(barID)
             local info = UIDropDownMenu_CreateInfo()
-            info.text = "Bar " .. barID
+            info.text = displayName
             info.func = function()
                 ExtraBars:SelectBar(barID)
-                UIDropDownMenu_SetText(ExtraBars.configPanel.barDropdown, "Bar " .. barID)
+                UIDropDownMenu_SetText(ExtraBars.configPanel.barDropdown, ExtraBars:GetBarDisplayName(barID))
             end
             info.checked = (ExtraBars.selectedBarID == barID)
             UIDropDownMenu_AddButton(info, level)
@@ -458,7 +488,7 @@ function ExtraBars:RefreshBarList()
     UIDropDownMenu_Initialize(self.configPanel.barDropdown, InitBarDropdown)
     
     if self.selectedBarID and self.db.bars[self.selectedBarID] then
-        UIDropDownMenu_SetText(self.configPanel.barDropdown, "Bar " .. self.selectedBarID)
+        UIDropDownMenu_SetText(self.configPanel.barDropdown, self:GetBarDisplayName(self.selectedBarID))
     else
         UIDropDownMenu_SetText(self.configPanel.barDropdown, "Select a bar...")
     end
@@ -482,6 +512,7 @@ function ExtraBars:UpdateConfigPanel()
     panel.deleteBtn:Show()
     
     panel.enabledCheck:SetChecked(barData.enabled)
+    panel.nameEditBox:SetText(barData.name or "")
     panel.sizeContainer.slider:SetValue(barData.iconSize)
     panel.paddingContainer.slider:SetValue(barData.iconPadding)
     panel.rowsContainer.slider:SetValue(barData.rows)

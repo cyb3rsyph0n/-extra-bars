@@ -9,6 +9,15 @@ ExtraBars.bars = {}
 ExtraBars.barFrames = {}
 ExtraBars.selectedBarID = nil
 
+-- Get display name for a bar (name if set, otherwise "Bar X")
+function ExtraBars:GetBarDisplayName(barID)
+    local barData = self.db and self.db.bars and self.db.bars[barID]
+    if barData and barData.name and barData.name ~= "" then
+        return barData.name
+    end
+    return "Bar " .. barID
+end
+
 -- Default settings for the addon
 local defaults = {
     bars = {},
@@ -17,6 +26,7 @@ local defaults = {
 
 -- Default settings for a new bar
 ExtraBars.barDefaults = {
+    name = "", -- User-defined name for the bar
     enabled = true,
     iconSize = 36,
     iconPadding = 2,

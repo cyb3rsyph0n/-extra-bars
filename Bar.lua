@@ -286,10 +286,11 @@ function ExtraBars:UpdateBar(barID)
     -- Get available items for this bar
     local items = self:GetAllAvailableItemsForBar(barID)
     
-    -- Update bar label
-    bar.label:SetText("Bar " .. barID)
+    -- Update bar label with display name
+    local displayName = self:GetBarDisplayName(barID)
+    bar.label:SetText(displayName)
     if bar.Selection and bar.Selection.Label then
-        bar.Selection.Label:SetText("|cff00ff00Bar " .. barID .. "|r")
+        bar.Selection.Label:SetText("|cff00ff00" .. displayName .. "|r")
     end
     
     local iconSize = barData.iconSize
