@@ -583,6 +583,23 @@ end
 function ExtraBars:ShowConfigPanel(barID)
     if not self.configPanel then return end
     
+    -- If no bar specified and no bar currently selected, select the first bar
+    if not barID and not self.selectedBarID then
+        local sortedBarIDs = {}
+        for id in pairs(self.db.bars) do
+            table.insert(sortedBarIDs, id)
+        end
+        table.sort(sortedBarIDs)
+        if #sortedBarIDs > 0 then
+            barID = sortedBarIDs[1]
+        end
+    end
+    
+    -- Select the specified bar
+    if barID then
+        self:SelectBar(barID)
+    end
+    
     self.configPanel:Show()
     self:RefreshBarList()
     self:UpdateConfigPanel()
