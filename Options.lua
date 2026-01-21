@@ -118,7 +118,7 @@ local function CreateConfigPanel()
     -- Settings section (initially hidden until bar selected)
     frame.settingsFrame = CreateFrame("Frame", nil, frame)
     frame.settingsFrame:SetPoint("TOPLEFT", 0, yPos)
-    frame.settingsFrame:SetPoint("BOTTOMRIGHT", 0, 50)
+    frame.settingsFrame:SetPoint("BOTTOMRIGHT", 0, 55) -- Leave room for bottom buttons
     frame.settingsFrame:Hide()
     
     local settingsY = 0
@@ -415,6 +415,7 @@ local function CreateConfigPanel()
     resetPosBtn:SetSize(110, 22)
     resetPosBtn:SetPoint("BOTTOMLEFT", 15, 18)
     resetPosBtn:SetText("Reset Position")
+    resetPosBtn:SetFrameLevel(frame:GetFrameLevel() + 10)
     resetPosBtn:SetScript("OnClick", function()
         if ExtraBars.selectedBarID then
             local barID = ExtraBars.selectedBarID
@@ -439,6 +440,7 @@ local function CreateConfigPanel()
     deleteBtn:SetSize(100, 22)
     deleteBtn:SetPoint("BOTTOMRIGHT", -15, 18)
     deleteBtn:SetText("Delete Bar")
+    deleteBtn:SetFrameLevel(frame:GetFrameLevel() + 10)
     deleteBtn:SetScript("OnClick", function()
         if ExtraBars.selectedBarID then
             StaticPopup_Show("EXTRABARS_DELETE_CONFIRM")
