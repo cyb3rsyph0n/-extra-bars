@@ -523,9 +523,12 @@ function ExtraBars:UpdateConfigPanel()
     panel.rowsContainer.slider:SetValue(barData.rows)
     panel.colsContainer.slider:SetValue(barData.cols)
     
-    -- Update anchor dropdown
+    -- Update anchor dropdown (handle legacy data where anchor might be a table)
     local anchorLabels = { TOPLEFT = "Top Left", TOPRIGHT = "Top Right", BOTTOMLEFT = "Bottom Left", BOTTOMRIGHT = "Bottom Right" }
-    local currentAnchor = barData.anchor or "TOPLEFT"
+    local currentAnchor = barData.anchor
+    if type(currentAnchor) ~= "string" then
+        currentAnchor = "TOPLEFT"
+    end
     UIDropDownMenu_SetText(panel.anchorDropdown, anchorLabels[currentAnchor] or "Top Left")
     
     -- Update category checkboxes

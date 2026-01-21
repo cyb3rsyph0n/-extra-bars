@@ -327,7 +327,11 @@ function ExtraBars:UpdateBar(barID)
         -- Position button in grid based on anchor
         local row = math.floor((buttonIndex - 1) / cols)
         local col = (buttonIndex - 1) % cols
-        local anchor = barData.anchor or "TOPLEFT"
+        -- Handle legacy data where anchor might be a table or missing
+        local anchor = barData.anchor
+        if type(anchor) ~= "string" then
+            anchor = "TOPLEFT"
+        end
         local xOffset, yOffset
         local anchorPoint
         
@@ -347,10 +351,16 @@ function ExtraBars:UpdateBar(barID)
             xOffset = -col * (iconSize + padding) - padding
             yOffset = row * (iconSize + padding) + padding
             anchorPoint = "BOTTOMRIGHT"
+        else
+            -- Default fallback
+            anchor = "TOPLEFT"
+            xOffset = col * (iconSize + padding) + padding
+            yOffset = -row * (iconSize + padding) - padding
+            anchorPoint = "TOPLEFT"
         end
         
         button:ClearAllPoints()
-        button:SetPoint(anchorPoint, bar, anchor, xOffset, yOffset)
+        button:SetPoint(anchorPoint, bar, anchorPoint, xOffset, yOffset)
         
         -- Set up button attributes and visuals
         if item.type == "SPELL" then
@@ -494,8 +504,12 @@ function ExtraBars:UpdateBarCooldownsAndCounts(barID)
     end
 end
 
--- Get the anchor point based on anchor setting
+-- Get the anchor point based on anchor setting (handles legacy data)
 function ExtraBars:GetAnchorPoint(anchor)
+    -- Handle legacy data where anchor might be a table
+    if type(anchor) ~= "string" then
+        return "TOPLEFT"
+    end
     -- Anchor is already the point name
     if anchor == "TOPLEFT" or anchor == "TOPRIGHT" or anchor == "BOTTOMLEFT" or anchor == "BOTTOMRIGHT" then
         return anchor
@@ -511,8 +525,7 @@ function ExtraBars:SaveBarPosition(barID)
     if not barData or not bar then return end
     
     -- Get the appropriate anchor point for the bar's anchor setting
-    local anchor = barData.anchor or "TOPLEFT"
-    local anchorPoint = self:GetAnchorPoint(anchor)
+    local anchorPoint = self:GetAnchorPoint(barData.anchor)
     
     -- Get the bar's current position in screen coordinates
     local left, bottom, width, height = bar:GetRect()
@@ -554,8 +567,7 @@ function ExtraBars:UpdateBarPosition(barID)
     if not barData or not bar then return end
     
     -- Get the appropriate anchor for the current anchor setting
-    local anchor = barData.anchor or "TOPLEFT"
-    local anchorPoint = self:GetAnchorPoint(anchor)
+    local anchorPoint = self:GetAnchorPoint(barData.anchor)
     
     bar:ClearAllPoints()
     
