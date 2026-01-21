@@ -410,10 +410,34 @@ local function CreateConfigPanel()
     -- Set scroll child height based on total categories
     frame.catContainer:SetHeight(totalCategories * 24)
     
+    -- Reset Position button at bottom
+    local resetPosBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    resetPosBtn:SetSize(110, 22)
+    resetPosBtn:SetPoint("BOTTOMLEFT", 15, 18)
+    resetPosBtn:SetText("Reset Position")
+    resetPosBtn:SetScript("OnClick", function()
+        if ExtraBars.selectedBarID then
+            local barID = ExtraBars.selectedBarID
+            local barData = ExtraBars.db.bars[barID]
+            if barData then
+                -- Reset anchor to default
+                barData.anchor = "TOPLEFT"
+                -- Reset position to centered above character
+                barData.position = ExtraBars:GetDefaultPosition()
+                -- Update bar
+                ExtraBars:UpdateBar(barID)
+                ExtraBars:UpdateBarPosition(barID)
+                ExtraBars:UpdateConfigPanel()
+                print("|cff00ff00!ExtraBars:|r Position reset for " .. ExtraBars:GetBarDisplayName(barID))
+            end
+        end
+    end)
+    frame.resetPosBtn = resetPosBtn
+    
     -- Delete button at bottom
     local deleteBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     deleteBtn:SetSize(100, 22)
-    deleteBtn:SetPoint("BOTTOM", 0, 18)
+    deleteBtn:SetPoint("BOTTOMRIGHT", -15, 18)
     deleteBtn:SetText("Delete Bar")
     deleteBtn:SetScript("OnClick", function()
         if ExtraBars.selectedBarID then
@@ -508,6 +532,7 @@ function ExtraBars:UpdateConfigPanel()
     if not barID or not self.db.bars[barID] then
         panel.settingsFrame:Hide()
         panel.deleteBtn:Hide()
+        panel.resetPosBtn:Hide()
         return
     end
     
@@ -515,6 +540,7 @@ function ExtraBars:UpdateConfigPanel()
     
     panel.settingsFrame:Show()
     panel.deleteBtn:Show()
+    panel.resetPosBtn:Show()
     
     panel.enabledCheck:SetChecked(barData.enabled)
     panel.nameEditBox:SetText(barData.name or "")

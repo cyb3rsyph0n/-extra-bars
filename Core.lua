@@ -35,12 +35,25 @@ ExtraBars.barDefaults = {
     anchor = "TOPLEFT", -- TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT
     categories = {}, -- List of category keys in order
     position = {
-        point = "CENTER",
-        relativePoint = "CENTER",
+        point = "TOPLEFT",
+        relativePoint = "TOPLEFT",
         xOffset = 0,
         yOffset = 0,
     },
 }
+
+-- Get default centered position for a bar (above character)
+function ExtraBars:GetDefaultPosition()
+    local screenWidth = GetScreenWidth()
+    local screenHeight = GetScreenHeight()
+    -- Center horizontally, position above character (about 60% up the screen)
+    return {
+        point = "TOPLEFT",
+        relativePoint = "TOPLEFT",
+        xOffset = (screenWidth / 2) - 200, -- Offset to roughly center a typical bar
+        yOffset = -(screenHeight * 0.35), -- About 35% from top (65% up from bottom)
+    }
+end
 
 -- Event frame for addon initialization
 local eventFrame = CreateFrame("Frame")
@@ -195,6 +208,8 @@ function ExtraBars:CreateNewBar()
     self.db.nextBarID = self.db.nextBarID + 1
     
     local barData = self:DeepCopy(self.barDefaults)
+    -- Set default position to centered above character
+    barData.position = self:GetDefaultPosition()
     
     self.db.bars[barID] = barData
     self:CreateBar(barID, barData)
