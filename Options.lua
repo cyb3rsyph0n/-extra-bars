@@ -52,7 +52,7 @@ end
 -- Create the main configuration panel
 local function CreateConfigPanel()
     local frame = CreateFrame("Frame", "ExtraBarsConfigPanel", UIParent, "BackdropTemplate")
-    frame:SetSize(330, 680)
+    frame:SetSize(330, 630)
     frame:SetPoint("LEFT", 20, 0)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
@@ -275,50 +275,6 @@ local function CreateConfigPanel()
     UIDropDownMenu_Initialize(frame.anchorDropdown, InitAnchorDropdown)
     
     settingsY = settingsY - 35
-    
-    -- X Position
-    frame.xPosContainer = CreateSlider(frame.settingsFrame, "EBXPosSlider", "X Position", -2000, 2000, 1, 120)
-    frame.xPosContainer:SetPoint("TOPLEFT", 20, settingsY)
-    frame.xPosContainer.slider:EnableMouseWheel(true)
-    frame.xPosContainer.slider:SetScript("OnMouseWheel", function(self, delta)
-        local value = self:GetValue() + delta
-        self:SetValue(value)
-    end)
-    frame.xPosContainer.slider:SetScript("OnValueChanged", function(self, value)
-        value = math.floor(value)
-        self.valueText:SetText(value)
-        local barID = ExtraBars.selectedBarID
-        if barID and ExtraBars.db.bars[barID] and ExtraBars.barFrames[barID] then
-            if not ExtraBars.db.bars[barID].position then
-                ExtraBars.db.bars[barID].position = {}
-            end
-            ExtraBars.db.bars[barID].position.xOffset = value
-            ExtraBars:UpdateBarPosition(barID)
-        end
-    end)
-    
-    -- Y Position
-    frame.yPosContainer = CreateSlider(frame.settingsFrame, "EBYPosSlider", "Y Position", -2000, 2000, 1, 120)
-    frame.yPosContainer:SetPoint("TOPLEFT", 160, settingsY)
-    frame.yPosContainer.slider:EnableMouseWheel(true)
-    frame.yPosContainer.slider:SetScript("OnMouseWheel", function(self, delta)
-        local value = self:GetValue() + delta
-        self:SetValue(value)
-    end)
-    frame.yPosContainer.slider:SetScript("OnValueChanged", function(self, value)
-        value = math.floor(value)
-        self.valueText:SetText(value)
-        local barID = ExtraBars.selectedBarID
-        if barID and ExtraBars.db.bars[barID] and ExtraBars.barFrames[barID] then
-            if not ExtraBars.db.bars[barID].position then
-                ExtraBars.db.bars[barID].position = {}
-            end
-            ExtraBars.db.bars[barID].position.yOffset = value
-            ExtraBars:UpdateBarPosition(barID)
-        end
-    end)
-    
-    settingsY = settingsY - 50
     
     -- Categories section
     local catTitle = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -594,16 +550,6 @@ function ExtraBars:UpdateConfigPanel()
     panel.paddingContainer.slider:SetValue(barData.iconPadding)
     panel.rowsContainer.slider:SetValue(barData.rows)
     panel.colsContainer.slider:SetValue(barData.cols)
-    
-    -- Update X/Y position sliders
-    local xPos = 0
-    local yPos = 0
-    if barData.position then
-        xPos = barData.position.xOffset or 0
-        yPos = barData.position.yOffset or 0
-    end
-    panel.xPosContainer.slider:SetValue(xPos)
-    panel.yPosContainer.slider:SetValue(yPos)
     
     -- Update anchor dropdown (handle legacy data where anchor might be a table)
     local anchorLabels = { TOPLEFT = "Top Left", TOPRIGHT = "Top Right", BOTTOMLEFT = "Bottom Left", BOTTOMRIGHT = "Bottom Right" }

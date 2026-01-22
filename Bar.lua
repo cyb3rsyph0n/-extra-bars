@@ -84,14 +84,6 @@ function ExtraBars:RegisterBarWithEditMode(barID, bar)
     selection:SetScript("OnDragStop", function(self)
         bar:StopMovingOrSizing()
         ExtraBars:SaveBarPosition(barID)
-        -- Update position sliders in config panel if open
-        if ExtraBars.configPanel and ExtraBars.configPanel:IsShown() and ExtraBars.selectedBarID == barID then
-            local barData = ExtraBars.db.bars[barID]
-            if barData and barData.position then
-                ExtraBars.configPanel.xPosContainer.slider:SetValue(barData.position.xOffset or 0)
-                ExtraBars.configPanel.yPosContainer.slider:SetValue(barData.position.yOffset or 0)
-            end
-        end
     end)
     
     selection:SetScript("OnMouseDown", function(self, button)
