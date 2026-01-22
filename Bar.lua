@@ -28,7 +28,7 @@ function ExtraBars:CreateBar(barID, barData)
     -- Create bar label (shown in edit mode)
     bar.label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bar.label:SetPoint("TOP", bar, "TOP", 0, 15)
-    bar.label:SetText("Bar " .. barID)
+    bar.label:SetText(self:GetBarDisplayName(barID))
     bar.label:Hide()
     
     -- Make bar movable
@@ -68,7 +68,7 @@ function ExtraBars:RegisterBarWithEditMode(barID, bar)
     -- Label for edit mode
     selection.Label = selection:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     selection.Label:SetPoint("TOP", selection, "TOP", 0, 20)
-    selection.Label:SetText("|cff00ff00Bar " .. barID .. "|r")
+    selection.Label:SetText("|cff00ff00" .. ExtraBars:GetBarDisplayName(barID) .. "|r")
     
     -- Make it draggable in edit mode
     selection:SetMovable(true)
@@ -99,7 +99,7 @@ function ExtraBars:RegisterBarWithEditMode(barID, bar)
                 selection:ShowHighlighted()
             end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine("Bar " .. barID, 1, 1, 1)
+            GameTooltip:AddLine(ExtraBars:GetBarDisplayName(barID), 1, 1, 1)
             GameTooltip:AddLine("Click to select, drag to move", 0.7, 0.7, 0.7)
             GameTooltip:AddLine("Use /eb to configure categories", 0.7, 0.7, 0.7)
             GameTooltip:Show()
@@ -180,7 +180,7 @@ function ExtraBars:OnEnterEditMode()
             
             -- Show selection frame with blue highlight
             bar.Selection:Show()
-            bar.Selection.Label:SetText("|cff00ff00Bar " .. barID .. "|r")
+            bar.Selection.Label:SetText("|cff00ff00" .. self:GetBarDisplayName(barID) .. "|r")
             
             -- Show the blue highlight border (native Edit Mode style)
             if bar.Selection.ShowHighlighted then
@@ -189,7 +189,7 @@ function ExtraBars:OnEnterEditMode()
             
             -- Show bar label
             bar.label:Show()
-            bar.label:SetText("Bar " .. barID)
+            bar.label:SetText(self:GetBarDisplayName(barID))
             
             -- Ensure minimum size for empty bars
             local width, height = bar:GetSize()
