@@ -384,6 +384,14 @@ function ExtraBars:PlayerHasItem(itemID)
     return C_Item.GetItemCount(itemID, true, false) > 0
 end
 
+-- Helper to get base item name (strip rank suffixes like " R2", " R3", etc.)
+function ExtraBars:GetBaseItemName(name)
+    if not name then return name end
+    -- Remove common rank patterns: " R2", " R3", " Rank 2", " Rank 3", etc.
+    local baseName = name:gsub(" R%d+$", ""):gsub(" Rank %d+$", ""):gsub(" %*+$", "")
+    return baseName
+end
+
 -- Get items for a category that the player can use
 function ExtraBars:GetAvailableItemsForCategory(categoryKey)
     local category = self.Categories[categoryKey]
@@ -396,6 +404,7 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
     
     local available = {}
     local bestByGroup = {} -- Track best item per group for showBestOnly categories
+    local bestByBaseName = {} -- Track best item per base name for rank consolidation
     
     for _, item in ipairs(category.items) do
         local isAvailable = false
@@ -413,6 +422,7 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
                 type = category.type,
                 priority = item.priority or 0,
                 group = item.group,
+                baseName = self:GetBaseItemName(item.name),
             }
             
             -- If this category shows best only, track by group
@@ -421,7 +431,18 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
                     bestByGroup[item.group] = itemData
                 end
             else
-                table.insert(available, itemData)
+                -- Consolidate by base name (ranks) - keep highest priority/ID
+                local baseName = itemData.baseName
+                if not bestByBaseName[baseName] then
+                    bestByBaseName[baseName] = itemData
+                else
+                    -- Keep the one with higher priority, or higher item ID (usually higher rank)
+                    local existing = bestByBaseName[baseName]
+                    if itemData.priority > existing.priority or 
+                       (itemData.priority == existing.priority and itemData.id > existing.id) then
+                        bestByBaseName[baseName] = itemData
+                    end
+                end
             end
         end
     end
@@ -437,6 +458,11 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
         if bestItem then
             table.insert(available, bestItem)
         end
+    else
+        -- Add consolidated items
+        for _, item in pairs(bestByBaseName) do
+            table.insert(available, item)
+        end
     end
     
     return available
@@ -448,6 +474,16 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
     if not barData then return {} end
     
     local allItems = {}
+    local seenBaseNames = {} -- Track base names to prevent duplicates
+    
+    -- Helper to add item if not a duplicate
+    local function addItemIfUnique(item)
+        local baseName = item.baseName or self:GetBaseItemName(item.name)
+        if not seenBaseNames[baseName] then
+            seenBaseNames[baseName] = true
+            table.insert(allItems, item)
+        end
+    end
     
     -- Check if we have custom item ordering
     if barData.itemOrder and #barData.itemOrder > 0 then
@@ -458,7 +494,7 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
                 local items = self:GetAvailableItemsForCategory(orderEntry.key)
                 for _, item in ipairs(items) do
                     item.category = orderEntry.key
-                    table.insert(allItems, item)
+                    addItemIfUnique(item)
                 end
             elseif orderEntry.type == "custom" then
                 -- Find the custom item by baseName (key is now baseName)
@@ -493,9 +529,10 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
                     if availableId then
                         local itemName = C_Item.GetItemInfo(availableId)
                         if itemName then
-                            table.insert(allItems, {
+                            addItemIfUnique({
                                 id = availableId,
                                 name = itemName,
+                                baseName = customItem.baseName or self:GetBaseItemName(itemName),
                                 type = "ITEM",
                                 category = "CUSTOM",
                             })
@@ -510,7 +547,7 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
             local items = self:GetAvailableItemsForCategory(categoryKey)
             for _, item in ipairs(items) do
                 item.category = categoryKey
-                table.insert(allItems, item)
+                addItemIfUnique(item)
             end
         end
         
@@ -536,9 +573,10 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
                 if availableId then
                     local itemName = C_Item.GetItemInfo(availableId)
                     if itemName then
-                        table.insert(allItems, {
+                        addItemIfUnique({
                             id = availableId,
                             name = itemName,
+                            baseName = customItem.baseName or self:GetBaseItemName(itemName),
                             type = "ITEM",
                             category = "CUSTOM",
                         })

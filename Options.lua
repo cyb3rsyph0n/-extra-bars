@@ -635,14 +635,6 @@ function ExtraBars:RemoveFromItemOrder(barID, itemType, key)
     end
 end
 
--- Helper to get base item name (strip rank suffixes like " R2", " R3", etc.)
-function ExtraBars:GetBaseItemName(name)
-    if not name then return name end
-    -- Remove common rank patterns: " R2", " R3", " Rank 2", " Rank 3", etc.
-    local baseName = name:gsub(" R%d+$", ""):gsub(" Rank %d+$", ""):gsub(" %*+$", "")
-    return baseName
-end
-
 -- Refresh the inventory tab with items from bags
 function ExtraBars:RefreshInventoryTab()
     local panel = self.configPanel
