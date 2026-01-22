@@ -205,7 +205,7 @@ function ExtraBars:OnExitEditMode()
     
     -- Hide config panel when exiting edit mode
     if self.configPanel and self.configPanel:IsShown() then
-        -- Keep it open but deselect
+        self.configPanel:Hide()
     end
 end
 
