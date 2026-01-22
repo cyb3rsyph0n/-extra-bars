@@ -317,6 +317,52 @@ local function CreateConfigPanel()
     
     settingsY = settingsY - 35
     
+    -- Strata dropdown
+    local strataLabel = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    strataLabel:SetPoint("TOPLEFT", 20, settingsY)
+    strataLabel:SetText("Strata:")
+    
+    frame.strataDropdown = CreateFrame("Frame", "EBStrataDropdown", frame.settingsFrame, "UIDropDownMenuTemplate")
+    frame.strataDropdown:SetPoint("TOPLEFT", 70, settingsY + 5)
+    UIDropDownMenu_SetWidth(frame.strataDropdown, 120)
+    
+    local stratas = {
+        { value = "BACKGROUND", text = "Background" },
+        { value = "LOW", text = "Low" },
+        { value = "MEDIUM", text = "Medium" },
+        { value = "HIGH", text = "High" },
+        { value = "DIALOG", text = "Dialog" },
+    }
+    
+    local function InitStrataDropdown(self, level)
+        for _, strata in ipairs(stratas) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = strata.text
+            info.value = strata.value
+            info.func = function()
+                local barID = ExtraBars.selectedBarID
+                if barID and ExtraBars.db.bars[barID] then
+                    ExtraBars.db.bars[barID].strata = strata.value
+                    UIDropDownMenu_SetText(frame.strataDropdown, strata.text)
+                    -- Update bar strata
+                    local barFrame = ExtraBars.barFrames[barID]
+                    if barFrame then
+                        barFrame:SetFrameStrata(strata.value)
+                    end
+                end
+            end
+            info.checked = function()
+                local barID = ExtraBars.selectedBarID
+                return barID and ExtraBars.db.bars[barID] and ExtraBars.db.bars[barID].strata == strata.value
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end
+    
+    UIDropDownMenu_Initialize(frame.strataDropdown, InitStrataDropdown)
+    
+    settingsY = settingsY - 35
+    
     -- Tab buttons container
     local tabContainer = CreateFrame("Frame", nil, frame.settingsFrame)
     tabContainer:SetPoint("TOPLEFT", 15, settingsY)
@@ -1131,6 +1177,11 @@ function ExtraBars:UpdateConfigPanel()
         currentAnchor = "TOPLEFT"
     end
     UIDropDownMenu_SetText(panel.anchorDropdown, anchorLabels[currentAnchor] or "Top Left")
+    
+    -- Update strata dropdown
+    local strataLabels = { BACKGROUND = "Background", LOW = "Low", MEDIUM = "Medium", HIGH = "High", DIALOG = "Dialog" }
+    local currentStrata = barData.strata or "MEDIUM"
+    UIDropDownMenu_SetText(panel.strataDropdown, strataLabels[currentStrata] or "Medium")
     
     -- Update category checkboxes
     for catKey, btn in pairs(panel.categoryButtons) do

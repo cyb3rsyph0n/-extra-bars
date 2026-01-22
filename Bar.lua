@@ -13,6 +13,10 @@ function ExtraBars:CreateBar(barID, barData)
     bar.barID = barID
     bar.buttons = {}
     
+    -- Set frame strata from settings
+    local strata = barData.strata or "MEDIUM"
+    bar:SetFrameStrata(strata)
+    
     -- Set up backdrop (invisible by default, shown in edit mode)
     bar:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",

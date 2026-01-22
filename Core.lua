@@ -33,6 +33,7 @@ ExtraBars.barDefaults = {
     rows = 1,
     cols = 12,
     anchor = "TOPLEFT", -- TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT
+    strata = "MEDIUM", -- Frame strata: BACKGROUND, LOW, MEDIUM, HIGH, DIALOG
     categories = {}, -- List of category keys in order
     customItems = {}, -- List of custom items from inventory { id = itemID, name = itemName }
     itemOrder = {}, -- Ordered list of all items: { type = "category"|"custom", key = catKey|itemID }
