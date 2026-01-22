@@ -1,8 +1,9 @@
 ## Interface: 120000
 ## Title: !ExtraBars
 ## Notes: Create customizable extra bars for tracking Racials, Consumables, and more
-## Author: Player
-## Version: 1.0.0
+## Author: cyb3rsyph0n
+## Version: @project-version@
+## X-Curse-Project-ID: 1440300
 ## SavedVariables: ExtraBarsDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10
 
