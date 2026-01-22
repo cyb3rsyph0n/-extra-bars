@@ -467,10 +467,10 @@ local function CreateConfigPanel()
     -- ==========================================
     local catScrollFrame = CreateFrame("ScrollFrame", "EBCategoryScrollFrame", categoriesTab, "UIPanelScrollFrameTemplate")
     catScrollFrame:SetPoint("TOPLEFT", 4, -4)
-    catScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    catScrollFrame:SetPoint("BOTTOMRIGHT", -26, 4)
     
     frame.catContainer = CreateFrame("Frame", nil, catScrollFrame)
-    frame.catContainer:SetSize(215, 1)
+    frame.catContainer:SetSize(250, 1)
     catScrollFrame:SetScrollChild(frame.catContainer)
     
     frame.categoryButtons = {}
@@ -482,7 +482,7 @@ local function CreateConfigPanel()
         local catData = ExtraBars.Categories[catKey]
         
         local catBtn = CreateFrame("Button", nil, frame.catContainer, "BackdropTemplate")
-        catBtn:SetSize(215, 22)
+        catBtn:SetSize(250, 22)
         catBtn:SetPoint("TOPLEFT", 0, catY)
         catBtn:SetBackdrop({
             bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -558,10 +558,10 @@ local function CreateConfigPanel()
     
     local invScrollFrame = CreateFrame("ScrollFrame", "EBInventoryScrollFrame", inventoryTab, "UIPanelScrollFrameTemplate")
     invScrollFrame:SetPoint("TOPLEFT", 4, -24)
-    invScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    invScrollFrame:SetPoint("BOTTOMRIGHT", -26, 4)
     
     frame.invContainer = CreateFrame("Frame", nil, invScrollFrame)
-    frame.invContainer:SetSize(215, 1)
+    frame.invContainer:SetSize(250, 1)
     invScrollFrame:SetScrollChild(frame.invContainer)
     
     frame.inventoryButtons = {}
@@ -575,10 +575,10 @@ local function CreateConfigPanel()
     
     local orderScrollFrame = CreateFrame("ScrollFrame", "EBOrderScrollFrame", orderTab, "UIPanelScrollFrameTemplate")
     orderScrollFrame:SetPoint("TOPLEFT", 4, -24)
-    orderScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    orderScrollFrame:SetPoint("BOTTOMRIGHT", -26, 4)
     
     frame.orderContainer = CreateFrame("Frame", nil, orderScrollFrame)
-    frame.orderContainer:SetSize(215, 1)
+    frame.orderContainer:SetSize(250, 1)
     orderScrollFrame:SetScrollChild(frame.orderContainer)
     
     frame.orderButtons = {}
@@ -737,7 +737,7 @@ function ExtraBars:RefreshInventoryTab()
     local invY = 0
     for i, item in ipairs(bagItems) do
         local btn = CreateFrame("Button", nil, panel.invContainer, "BackdropTemplate")
-        btn:SetSize(215, 24)
+        btn:SetSize(250, 24)
         btn:SetPoint("TOPLEFT", 0, invY)
         btn:SetBackdrop({
             bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -884,7 +884,7 @@ function ExtraBars:RefreshOrderTab()
     local orderY = 0
     for i, entry in ipairs(orderList) do
         local btn = CreateFrame("Button", nil, panel.orderContainer, "BackdropTemplate")
-        btn:SetSize(215, 24)
+        btn:SetSize(250, 24)
         btn:SetPoint("TOPLEFT", 0, orderY)
         btn:SetBackdrop({
             bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
