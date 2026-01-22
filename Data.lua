@@ -416,13 +416,22 @@ function ExtraBars:GetAvailableItemsForCategory(categoryKey)
         end
         
         if isAvailable then
+            -- Get the actual item name from the game (may have R1/R2/R3 suffix)
+            local actualName = item.name
+            if category.type == "ITEM" then
+                local itemInfo = C_Item.GetItemInfo(item.id)
+                if itemInfo then
+                    actualName = itemInfo
+                end
+            end
+            
             local itemData = {
                 id = item.id,
-                name = item.name,
+                name = actualName,
                 type = category.type,
                 priority = item.priority or 0,
                 group = item.group,
-                baseName = self:GetBaseItemName(item.name),
+                baseName = self:GetBaseItemName(actualName),
             }
             
             -- If this category shows best only, track by group
