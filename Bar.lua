@@ -163,6 +163,21 @@ function ExtraBars:OnEnterEditMode()
         if bar and bar.Selection then
             local barData = self.db.bars[barID]
             
+            -- Update bar first to ensure correct sizing
+            self:UpdateBar(barID)
+            
+            -- Refresh the selection frame to match bar size
+            bar.Selection:ClearAllPoints()
+            bar.Selection:SetAllPoints(bar)
+            if bar.Selection.HighlightFrame then
+                bar.Selection.HighlightFrame:ClearAllPoints()
+                bar.Selection.HighlightFrame:SetAllPoints(bar)
+            end
+            if bar.Selection.SelectionFrame then
+                bar.Selection.SelectionFrame:ClearAllPoints()
+                bar.Selection.SelectionFrame:SetAllPoints(bar)
+            end
+            
             -- Show selection frame with blue highlight
             bar.Selection:Show()
             bar.Selection.Label:SetText("|cff00ff00Bar " .. barID .. "|r")
