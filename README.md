@@ -39,3 +39,15 @@ ExtraBars lets you create additional action bars specifically designed for track
 - Raiders who need quick access to flasks, potions, and food
 - PvPers wanting racial abilities and trinkets at their fingertips
 - Anyone tired of digging through bags for consumables!
+## Installation
+
+### From CurseForge
+Download from [CurseForge](https://www.curseforge.com/wow/addons/extrabars) or use a client like CurseForge App or WowUp.
+
+### Manual Installation
+1. Download the latest release
+2. Extract to `World of Warcraft/_retail_/Interface/AddOns/`
+3. Restart WoW or `/reload`
+
+## License
+All Rights Reserved
