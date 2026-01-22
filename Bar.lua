@@ -237,18 +237,12 @@ function ExtraBars:CreateButton(bar, index, iconSize)
     button.count:SetPoint("BOTTOMRIGHT", -2, 2)
     button.count:SetJustifyH("RIGHT")
     
-    button.border = button:CreateTexture(nil, "OVERLAY")
-    button.border:SetPoint("TOPLEFT", -1, 1)
-    button.border:SetPoint("BOTTOMRIGHT", 1, -1)
-    button.border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    button.border:SetBlendMode("ADD")
-    button.border:SetAlpha(0.5)
-    
-    -- Highlight texture
-    button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-    
-    -- Push texture
-    button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+    -- Highlight texture (subtle glow on hover)
+    local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+    highlight:SetAllPoints()
+    highlight:SetColorTexture(1, 1, 1, 0.3)
+    highlight:SetBlendMode("ADD")
+    button.highlightTexture = highlight
     
     -- Set up tooltip
     button:SetScript("OnEnter", function(self)
@@ -325,13 +319,10 @@ function ExtraBars:UpdateBar(barID)
         button.itemType = item.type
         button.isPlaceholder = nil
         
-        -- Restore hover/click effects (in case this was a placeholder)
-        button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-        button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-        local highlight = button:GetHighlightTexture()
-        if highlight then highlight:SetAlpha(1) end
-        local pushed = button:GetPushedTexture()
-        if pushed then pushed:SetAlpha(1) end
+        -- Restore hover effects (in case this was a placeholder)
+        if button.highlightTexture then
+            button.highlightTexture:Show()
+        end
         
         -- Position button in grid based on anchor
         local row = math.floor((buttonIndex - 1) / cols)
@@ -471,11 +462,10 @@ function ExtraBars:UpdateBar(barID)
         button.count:SetText("")
         button.cooldown:Clear()
         
-        -- Remove hover/click effects so it doesn't look interactive
-        local highlight = button:GetHighlightTexture()
-        if highlight then highlight:SetAlpha(0) end
-        local pushed = button:GetPushedTexture()
-        if pushed then pushed:SetAlpha(0) end
+        -- Remove hover effects so it doesn't look interactive
+        if button.highlightTexture then
+            button.highlightTexture:Hide()
+        end
         button.isPlaceholder = true
         
         button:Show()
