@@ -601,6 +601,47 @@ function ExtraBars:GetAnchorPoint(anchor)
     return "TOPLEFT" -- Default
 end
 
+-- Convert bar position from current anchor to new anchor (keeps bar in same screen position)
+function ExtraBars:ConvertAnchorPosition(barID, newAnchor)
+    local barData = self.db.bars[barID]
+    local bar = self.barFrames[barID]
+    
+    if not barData or not bar then return end
+    
+    -- Get the bar's current screen rectangle
+    local left, bottom, width, height = bar:GetRect()
+    if not left then return end
+    
+    local screenWidth = UIParent:GetWidth()
+    local screenHeight = UIParent:GetHeight()
+    
+    -- Calculate new offsets based on the NEW anchor point
+    local newXOfs, newYOfs
+    if newAnchor == "TOPLEFT" then
+        newXOfs = left
+        newYOfs = (bottom + height) - screenHeight
+    elseif newAnchor == "TOPRIGHT" then
+        newXOfs = (left + width) - screenWidth
+        newYOfs = (bottom + height) - screenHeight
+    elseif newAnchor == "BOTTOMLEFT" then
+        newXOfs = left
+        newYOfs = bottom
+    elseif newAnchor == "BOTTOMRIGHT" then
+        newXOfs = (left + width) - screenWidth
+        newYOfs = bottom
+    else
+        return -- Invalid anchor
+    end
+    
+    -- Update position data for the new anchor
+    barData.position = {
+        point = newAnchor,
+        relativePoint = newAnchor,
+        xOffset = newXOfs,
+        yOffset = newYOfs,
+    }
+end
+
 -- Save bar position after dragging (using anchor-aware positioning)
 function ExtraBars:SaveBarPosition(barID)
     local barData = self.db.bars[barID]

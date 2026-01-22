@@ -295,12 +295,12 @@ local function CreateConfigPanel()
             info.func = function()
                 local barID = ExtraBars.selectedBarID
                 if barID and ExtraBars.db.bars[barID] then
-                    -- Save current position before changing anchor
-                    ExtraBars:SaveBarPosition(barID)
+                    -- Convert position to new anchor (keeps bar in same screen position)
+                    ExtraBars:ConvertAnchorPosition(barID, anch.value)
                     -- Change anchor
                     ExtraBars.db.bars[barID].anchor = anch.value
                     UIDropDownMenu_SetText(frame.anchorDropdown, anch.text)
-                    -- Update bar layout and reposition with new anchor
+                    -- Update bar layout and apply new position
                     ExtraBars:UpdateBar(barID)
                     ExtraBars:UpdateBarPosition(barID)
                 end
@@ -711,6 +711,7 @@ function ExtraBars:RefreshInventoryTab()
                 quality = item.quality,
                 itemIds = {},
                 primaryId = item.id, -- First one found
+                inInventory = true,
             }
             table.insert(groupOrder, baseName)
         end
@@ -720,6 +721,27 @@ function ExtraBars:RefreshInventoryTab()
         if item.quality > groupedItems[baseName].quality then
             groupedItems[baseName].quality = item.quality
             groupedItems[baseName].icon = item.icon
+        end
+    end
+    
+    -- Also add custom items that are selected but not in inventory (so user can uncheck them)
+    for _, customItem in ipairs(barData.customItems) do
+        local baseName = customItem.baseName or customItem.name
+        if not groupedItems[baseName] then
+            -- Item is selected but not in inventory - add it so it can be unchecked
+            local itemId = customItem.id or (customItem.itemIds and customItem.itemIds[1])
+            local icon = itemId and C_Item.GetItemIconByID(itemId)
+            local name, _, quality = C_Item.GetItemInfo(itemId)
+            groupedItems[baseName] = {
+                baseName = baseName,
+                displayName = baseName,
+                icon = icon or "Interface\\Icons\\INV_Misc_QuestionMark",
+                quality = quality or 1,
+                itemIds = customItem.itemIds or { customItem.id },
+                primaryId = itemId,
+                inInventory = false, -- Not in inventory
+            }
+            table.insert(groupOrder, baseName)
         end
     end
     
@@ -761,20 +783,32 @@ function ExtraBars:RefreshInventoryTab()
         btn.iconTexture:SetPoint("LEFT", btn.check, "RIGHT", 2, 0)
         btn.iconTexture:SetTexture(item.icon)
         
+        -- Grey out items not in inventory
+        if not item.inInventory then
+            btn.iconTexture:SetDesaturated(true)
+            btn.iconTexture:SetVertexColor(0.5, 0.5, 0.5)
+        end
+        
         btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         btn.label:SetPoint("LEFT", btn.iconTexture, "RIGHT", 4, 0)
         btn.label:SetPoint("RIGHT", -8, 0)
         btn.label:SetJustifyH("LEFT")
-        -- Show rank count if multiple ranks exist
+        -- Show rank count if multiple ranks exist, or "not in bags" indicator
         local displayText = item.displayName
-        if #item.itemIds > 1 then
+        if not item.inInventory then
+            displayText = displayText .. " |cff888888(not in bags)|r"
+        elseif #item.itemIds > 1 then
             displayText = displayText .. " |cff888888(x" .. #item.itemIds .. " ranks)|r"
         end
         btn.label:SetText(displayText)
         
-        -- Set quality color
+        -- Set quality color (dimmed if not in inventory)
         local r, g, b = C_Item.GetItemQualityColor(item.quality)
-        btn.label:SetTextColor(r, g, b)
+        if not item.inInventory then
+            btn.label:SetTextColor(r * 0.5, g * 0.5, b * 0.5)
+        else
+            btn.label:SetTextColor(r, g, b)
+        end
         
         -- Check if already selected (check by baseName match in customItems)
         local isSelected = false
