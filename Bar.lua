@@ -526,18 +526,61 @@ function ExtraBars:UpdateButtonCooldown(button, itemType, itemID)
     if not button.cooldown then return end
     
     local start, duration = 0, 0
+    local inCombat = InCombatLockdown()
     
-    if itemType == "SPELL" then
-        local cooldownInfo = C_Spell.GetSpellCooldown(itemID)
-        if cooldownInfo then
-            start = cooldownInfo.startTime
-            duration = cooldownInfo.duration
+    if not inCombat then
+        -- Outside combat: query actual values and cache them
+        if itemType == "SPELL" then
+            local cooldownInfo = C_Spell.GetSpellCooldown(itemID)
+            if cooldownInfo and type(cooldownInfo.startTime) == "number" and type(cooldownInfo.duration) == "number" then
+                start = cooldownInfo.startTime
+                duration = cooldownInfo.duration
+            end
+            -- Always cache the base cooldown duration from spell data (in milliseconds, convert to seconds)
+            local baseCooldown = GetSpellBaseCooldown(itemID)
+            if baseCooldown and baseCooldown > 1500 then  -- Ignore GCD (1.5s = 1500ms)
+                button.baseCDDuration = baseCooldown / 1000
+            end
+        elseif itemType == "ITEM" then
+            local itemStart, itemDuration = C_Item.GetItemCooldown(itemID)
+            if type(itemStart) == "number" and type(itemDuration) == "number" then
+                start = itemStart
+                duration = itemDuration
+            end
+            -- Cache the spell ID that this item casts (for detecting use during combat)
+            local itemSpellID = select(1, C_Item.GetItemSpell(itemID))
+            if itemSpellID then
+                button.itemSpellID = itemSpellID
+                -- Get the base cooldown from the item's spell
+                local baseCooldown = GetSpellBaseCooldown(itemSpellID)
+                if baseCooldown and baseCooldown > 1500 then  -- Ignore GCD
+                    button.baseCDDuration = baseCooldown / 1000
+                end
+            end
         end
-    elseif itemType == "ITEM" then
-        start, duration = C_Item.GetItemCooldown(itemID)
+        
+        -- Cache the current cooldown values on the button
+        button.cachedCDStart = start
+        button.cachedCDDuration = duration
+    else
+        -- During combat: use cached values if available
+        if button.cachedCDStart and button.cachedCDDuration then
+            start = button.cachedCDStart
+            duration = button.cachedCDDuration
+            
+            -- Check if the cached cooldown has expired
+            local now = GetTime()
+            if start > 0 and duration > 0 and (now >= start + duration) then
+                -- Cooldown has expired, clear it
+                start = 0
+                duration = 0
+                button.cachedCDStart = 0
+                button.cachedCDDuration = 0
+            end
+        end
     end
     
-    if start and duration and start > 0 and duration > 0 then
+    if start > 0 and duration > 0 then
         button.cooldown:SetCooldown(start, duration)
     else
         button.cooldown:Clear()
@@ -566,13 +609,15 @@ function ExtraBars:UpdateBarCooldownsAndCounts(barID)
     local bar = self.barFrames[barID]
     if not bar then return end
     
+    local inCombat = InCombatLockdown()
+    
     for _, button in ipairs(bar.buttons) do
         if button:IsShown() and button.itemID and button.itemType then
-            -- Update cooldown
+            -- Update cooldown (uses cached values during combat)
             self:UpdateButtonCooldown(button, button.itemType, button.itemID)
             
-            -- Update count for items
-            if button.itemType == "ITEM" then
+            -- Update count for items (skip during combat as GetItemCount may return protected values)
+            if not inCombat and button.itemType == "ITEM" then
                 local count = C_Item.GetItemCount(button.itemID, true, false)
                 if count > 1 then
                     button.count:SetText(count)
@@ -729,10 +774,68 @@ updateFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 updateFrame:RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
 updateFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 updateFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+updateFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
-updateFrame:SetScript("OnEvent", function(self, event)
+updateFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "UNIT_SPELLCAST_SUCCEEDED" then
+        local unit, castGUID, spellID = ...
+        if unit == "player" and InCombatLockdown() then
+            -- Find any buttons with this spell and start their cooldown
+            ExtraBars:OnSpellCastSucceeded(spellID)
+        end
+        return
+    end
+    
     -- Delay update slightly to allow game state to settle
     C_Timer.After(0.1, function()
+        -- Skip updates during combat to avoid secret value errors
+        -- PLAYER_REGEN_ENABLED will trigger a full refresh when combat ends
+        if InCombatLockdown() then
+            return
+        end
         ExtraBars:UpdateAllBars()
     end)
 end)
+
+-- Handle spell cast during combat - start cooldown using cached duration
+function ExtraBars:OnSpellCastSucceeded(spellID)
+    local now = GetTime()
+    
+    -- DEBUG: Print spell cast detected
+    print("|cff00ff00!ExtraBars DEBUG:|r Spell cast detected: " .. spellID)
+    
+    for barID, bar in pairs(self.barFrames) do
+        if bar.buttons then
+            for _, button in ipairs(bar.buttons) do
+                local isMatch = false
+                
+                -- Check if it's a direct spell match
+                if button.itemType == "SPELL" and button.itemID == spellID then
+                    isMatch = true
+                    print("|cff00ff00!ExtraBars DEBUG:|r Direct spell match found!")
+                -- Check if it's an item that casts this spell (potions, trinkets, etc.)
+                elseif button.itemType == "ITEM" and button.itemSpellID == spellID then
+                    isMatch = true
+                    print("|cff00ff00!ExtraBars DEBUG:|r Item spell match found! itemSpellID=" .. tostring(button.itemSpellID))
+                elseif button.itemType == "ITEM" then
+                    -- DEBUG: Show what itemSpellID we have cached
+                    print("|cff00ff00!ExtraBars DEBUG:|r Item button itemID=" .. tostring(button.itemID) .. " has itemSpellID=" .. tostring(button.itemSpellID) .. " (looking for " .. spellID .. ")")
+                end
+                
+                if isMatch then
+                    -- Use cached base duration if available
+                    local duration = button.baseCDDuration or 0
+                    print("|cff00ff00!ExtraBars DEBUG:|r baseCDDuration=" .. tostring(duration))
+                    if duration > 1.5 then  -- Must be more than GCD
+                        button.cachedCDStart = now
+                        button.cachedCDDuration = duration
+                        button.cooldown:SetCooldown(now, duration)
+                        print("|cff00ff00!ExtraBars DEBUG:|r Started cooldown: " .. duration .. "s")
+                    else
+                        print("|cff00ff00!ExtraBars DEBUG:|r Duration too short or not cached")
+                    end
+                end
+            end
+        end
+    end
+end

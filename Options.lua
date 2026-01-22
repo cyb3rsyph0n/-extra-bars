@@ -69,10 +69,12 @@ local function CreateTabButton(parent, text, tabIndex, tabFrame, mainFrame)
     
     btn.tabIndex = tabIndex
     btn.tabFrame = tabFrame
-    btn.mainFrame = mainFrame
     
     btn:SetScript("OnClick", function(self)
-        self.mainFrame:SelectTab(self.tabIndex)
+        local panel = ExtraBarsConfigPanel
+        if panel and panel.SelectTab then
+            panel:SelectTab(self.tabIndex)
+        end
     end)
     
     btn:SetScript("OnEnter", function(self)
