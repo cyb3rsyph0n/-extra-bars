@@ -328,6 +328,10 @@ function ExtraBars:UpdateBar(barID)
         -- Restore hover/click effects (in case this was a placeholder)
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+        local highlight = button:GetHighlightTexture()
+        if highlight then highlight:SetAlpha(1) end
+        local pushed = button:GetPushedTexture()
+        if pushed then pushed:SetAlpha(1) end
         
         -- Position button in grid based on anchor
         local row = math.floor((buttonIndex - 1) / cols)
@@ -468,8 +472,10 @@ function ExtraBars:UpdateBar(barID)
         button.cooldown:Clear()
         
         -- Remove hover/click effects so it doesn't look interactive
-        button:SetHighlightTexture(nil)
-        button:SetPushedTexture(nil)
+        local highlight = button:GetHighlightTexture()
+        if highlight then highlight:SetAlpha(0) end
+        local pushed = button:GetPushedTexture()
+        if pushed then pushed:SetAlpha(0) end
         button.isPlaceholder = true
         
         button:Show()
