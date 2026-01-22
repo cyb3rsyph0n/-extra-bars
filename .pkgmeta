@@ -1,0 +1,6 @@
+package-as: ExtraBars
+
+ignore:
+    - README.md
+    - .gitignore
+    - .github
