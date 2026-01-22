@@ -759,11 +759,8 @@ function ExtraBars:RefreshInventoryTab()
         table.insert(bagItems, groupedItems[baseName])
     end
     
-    -- Sort by quality (descending) then name
+    -- Sort alphabetically by base name
     table.sort(bagItems, function(a, b)
-        if a.quality ~= b.quality then
-            return a.quality > b.quality
-        end
         return a.baseName < b.baseName
     end)
     

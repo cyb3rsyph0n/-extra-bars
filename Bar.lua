@@ -386,13 +386,25 @@ function ExtraBars:UpdateBar(barID)
             -- Update cooldown
             self:UpdateButtonCooldown(button, "SPELL", item.id)
             
+            -- Spells are always available if shown
+            button.icon:SetDesaturated(false)
+            button.icon:SetVertexColor(1, 1, 1)
+            
         elseif item.type == "ITEM" then
+            -- Check if this item is unavailable (custom item that player ran out of)
+            local isUnavailable = item.unavailable
+            
             -- Check if this is an equipped item (trinket)
             if item.slotID then
                 -- Use slot-based action for equipped items
                 button:SetAttribute("type", "macro")
                 button:SetAttribute("macrotext", "/use " .. item.slotID)
                 button.slotID = item.slotID
+            elseif isUnavailable then
+                -- Unavailable item - disable interaction
+                button:SetAttribute("type", nil)
+                button:SetAttribute("item", nil)
+                button.slotID = nil
             else
                 button:SetAttribute("type", "item")
                 button:SetAttribute("item", "item:" .. item.id)
@@ -404,6 +416,15 @@ function ExtraBars:UpdateBar(barID)
                 button.icon:SetTexture(itemIcon)
             end
             
+            -- Grey out unavailable items
+            if isUnavailable then
+                button.icon:SetDesaturated(true)
+                button.icon:SetVertexColor(0.5, 0.5, 0.5)
+            else
+                button.icon:SetDesaturated(false)
+                button.icon:SetVertexColor(1, 1, 1)
+            end
+            
             -- Update count (don't show for equipped items)
             if item.slotID then
                 button.count:SetText("")
@@ -411,9 +432,17 @@ function ExtraBars:UpdateBar(barID)
                 local count = C_Item.GetItemCount(item.id, true, false)
                 if count > 1 then
                     button.count:SetText(count)
+                elseif isUnavailable then
+                    button.count:SetText("0")
+                    button.count:SetTextColor(1, 0.3, 0.3) -- Red color for 0 count
                 else
                     button.count:SetText("")
                 end
+            end
+            
+            -- Reset count color for available items
+            if not isUnavailable then
+                button.count:SetTextColor(1, 1, 1)
             end
             
             -- Update cooldown

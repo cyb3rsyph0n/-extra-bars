@@ -58,9 +58,9 @@ ExtraBars.Categories = {
         },
     },
     
-    -- Food
-    FOOD = {
-        name = "Food",
+    -- Food & Drink (combined)
+    FOOD_DRINK = {
+        name = "Food & Drink",
         type = "ITEM",
         items = {
             -- The War Within Food (TWW)
@@ -118,21 +118,10 @@ ExtraBars.Categories = {
             { id = 197776, name = "Cheeseburger" },
             { id = 197777, name = "Sweet and Sour Clam Chowder" },
             { id = 197778, name = "Breakfast of Draconic Champions" },
-        },
-    },
-    
-    -- Drinks/Mana
-    DRINKS = {
-        name = "Drinks",
-        type = "ITEM",
-        items = {
-            -- TWW Drinks
+            
+            -- Drinks/Mana
             { id = 222720, name = "Algari Mana Oil" },
-            
-            -- Dragonflight
             { id = 197779, name = "Potion Absorption Inhibitor" },
-            
-            -- Generic Drinks
             { id = 159867, name = "Rockskip Mineral Water" },
             { id = 178222, name = "Purified Skyspring Water" },
             { id = 194684, name = "Azure Leywine" },
@@ -180,11 +169,10 @@ ExtraBars.Categories = {
         },
     },
     
-    -- Health Potions
+    -- Health Potions (includes Healthstones)
     HEALTH_POTIONS = {
         name = "Health Potions",
         type = "ITEM",
-        showBestOnly = true, -- Only show the best available healing potion
         items = {
             -- The War Within Health Potions (all ranks) - priority determines which is "best"
             { id = 211878, name = "Invigorating Healing Potion", priority = 100, group = "invigorating" },
@@ -335,13 +323,10 @@ ExtraBars.Categories = {
 -- Category display order
 ExtraBars.CategoryOrder = {
     "RACIALS",
-    "FOOD",
-    "DRINKS",
-    "FLASKS",
+    "FOOD_DRINK",
     "HEALTH_POTIONS",
+    "FLASKS",
     "COMBAT_POTIONS",
-    "UTILITY",
-    "TRINKETS",
 }
 
 -- Helper function to check if player knows a spell
@@ -520,32 +505,39 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
                 if customItem then
                     -- Check if player has any of the ranked items
                     local availableId = nil
+                    local hasItem = false
                     if customItem.itemIds then
                         -- New format: check all item IDs
                         for _, itemId in ipairs(customItem.itemIds) do
                             if self:PlayerHasItem(itemId) then
                                 availableId = itemId
+                                hasItem = true
                                 break
                             end
+                        end
+                        -- If not available, use first ID for display
+                        if not availableId then
+                            availableId = customItem.itemIds[1]
                         end
                     else
                         -- Legacy format: single item ID
                         if self:PlayerHasItem(customItem.id) then
-                            availableId = customItem.id
+                            hasItem = true
                         end
+                        availableId = customItem.id
                     end
                     
+                    -- Always add custom items, but mark if unavailable
                     if availableId then
-                        local itemName = C_Item.GetItemInfo(availableId)
-                        if itemName then
-                            addItemIfUnique({
-                                id = availableId,
-                                name = itemName,
-                                baseName = customItem.baseName or self:GetBaseItemName(itemName),
-                                type = "ITEM",
-                                category = "CUSTOM",
-                            })
-                        end
+                        local itemName = C_Item.GetItemInfo(availableId) or customItem.name or customItem.baseName
+                        addItemIfUnique({
+                            id = availableId,
+                            name = itemName,
+                            baseName = customItem.baseName or self:GetBaseItemName(itemName),
+                            type = "ITEM",
+                            category = "CUSTOM",
+                            unavailable = not hasItem, -- Mark as unavailable if player doesn't have it
+                        })
                     end
                 end
             end
@@ -564,32 +556,39 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
         if barData.customItems then
             for _, customItem in ipairs(barData.customItems) do
                 local availableId = nil
+                local hasItem = false
                 if customItem.itemIds then
                     -- New format: check all item IDs
                     for _, itemId in ipairs(customItem.itemIds) do
                         if self:PlayerHasItem(itemId) then
                             availableId = itemId
+                            hasItem = true
                             break
                         end
+                    end
+                    -- If not available, use first ID for display
+                    if not availableId then
+                        availableId = customItem.itemIds[1]
                     end
                 else
                     -- Legacy format: single item ID
                     if self:PlayerHasItem(customItem.id) then
-                        availableId = customItem.id
+                        hasItem = true
                     end
+                    availableId = customItem.id
                 end
                 
+                -- Always add custom items, but mark if unavailable
                 if availableId then
-                    local itemName = C_Item.GetItemInfo(availableId)
-                    if itemName then
-                        addItemIfUnique({
-                            id = availableId,
-                            name = itemName,
-                            baseName = customItem.baseName or self:GetBaseItemName(itemName),
-                            type = "ITEM",
-                            category = "CUSTOM",
-                        })
-                    end
+                    local itemName = C_Item.GetItemInfo(availableId) or customItem.name or customItem.baseName
+                    addItemIfUnique({
+                        id = availableId,
+                        name = itemName,
+                        baseName = customItem.baseName or self:GetBaseItemName(itemName),
+                        type = "ITEM",
+                        category = "CUSTOM",
+                        unavailable = not hasItem, -- Mark as unavailable if player doesn't have it
+                    })
                 end
             end
         end
