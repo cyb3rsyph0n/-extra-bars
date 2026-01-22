@@ -503,9 +503,27 @@ local function CreateConfigPanel()
         catBtn.label:SetPoint("LEFT", catBtn.check, "RIGHT", 2, 0)
         catBtn.label:SetText(catData.name)
         
-        catBtn.order = catBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        catBtn.order:SetPoint("RIGHT", -8, 0)
-        catBtn.order:SetTextColor(0.5, 1, 0.5)
+        -- Up arrow button
+        catBtn.upBtn = CreateFrame("Button", nil, catBtn)
+        catBtn.upBtn:SetSize(14, 14)
+        catBtn.upBtn:SetPoint("RIGHT", -20, 0)
+        catBtn.upBtn:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up")
+        catBtn.upBtn:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Down")
+        catBtn.upBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Highlight")
+        catBtn.upBtn:SetScript("OnClick", function()
+            ExtraBars:MoveCategoryInOrder(catKey, -1)
+        end)
+        
+        -- Down arrow button
+        catBtn.downBtn = CreateFrame("Button", nil, catBtn)
+        catBtn.downBtn:SetSize(14, 14)
+        catBtn.downBtn:SetPoint("RIGHT", -4, 0)
+        catBtn.downBtn:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up")
+        catBtn.downBtn:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Down")
+        catBtn.downBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Highlight")
+        catBtn.downBtn:SetScript("OnClick", function()
+            ExtraBars:MoveCategoryInOrder(catKey, 1)
+        end)
         
         catBtn.check:SetScript("OnClick", function(self)
             local barID = ExtraBars.selectedBarID
@@ -538,39 +556,13 @@ local function CreateConfigPanel()
             ExtraBars:UpdateConfigPanel()
         end)
         
-        -- Drag to reorder (categories within categories tab)
+        -- Hover highlight
         catBtn:EnableMouse(true)
-        catBtn:RegisterForDrag("LeftButton")
-        
-        catBtn:SetScript("OnDragStart", function(self)
-            if self.check:GetChecked() then
-                self.dragging = true
-                self:SetBackdropColor(0.3, 0.3, 0, 0.9)
-            end
-        end)
-        
-        catBtn:SetScript("OnDragStop", function(self)
-            self.dragging = false
-            self:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
-        end)
-        
         catBtn:SetScript("OnEnter", function(self)
-            if not self.dragging then
-                self:SetBackdropColor(0.25, 0.25, 0.25, 0.9)
-            end
-            for _, btn in pairs(frame.categoryButtons) do
-                if btn.dragging and btn ~= self then
-                    ExtraBars:SwapCategories(btn.categoryKey, self.categoryKey)
-                    btn.dragging = false
-                    btn:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
-                end
-            end
+            self:SetBackdropColor(0.25, 0.25, 0.25, 0.9)
         end)
-        
         catBtn:SetScript("OnLeave", function(self)
-            if not self.dragging then
-                self:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
-            end
+            self:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
         end)
         
         frame.categoryButtons[catKey] = catBtn
@@ -1087,6 +1079,64 @@ function ExtraBars:SwapCategories(key1, key2)
     end
 end
 
+-- Move category up or down in order (direction: -1 for up, 1 for down)
+function ExtraBars:MoveCategoryInOrder(categoryKey, direction)
+    local barID = self.selectedBarID
+    if not barID or not self.db.bars[barID] then return end
+    
+    local categories = self.db.bars[barID].categories
+    local currentIdx = nil
+    
+    for i, cat in ipairs(categories) do
+        if cat == categoryKey then
+            currentIdx = i
+            break
+        end
+    end
+    
+    if not currentIdx then return end
+    
+    local newIdx = currentIdx + direction
+    if newIdx < 1 or newIdx > #categories then return end
+    
+    -- Swap with adjacent item
+    categories[currentIdx], categories[newIdx] = categories[newIdx], categories[currentIdx]
+    
+    -- Also swap in itemOrder
+    local itemOrder = self.db.bars[barID].itemOrder
+    if itemOrder then
+        local orderCurrentIdx, orderNewIdx
+        local catCount = 0
+        for i, entry in ipairs(itemOrder) do
+            if entry.type == "category" then
+                catCount = catCount + 1
+                if entry.key == categoryKey then
+                    orderCurrentIdx = i
+                end
+                if catCount == newIdx and entry.key ~= categoryKey then
+                    orderNewIdx = i
+                end
+            end
+        end
+        -- Find the entry we're swapping with
+        if orderCurrentIdx then
+            local swapKey = categories[currentIdx] -- This is now the swapped category
+            for i, entry in ipairs(itemOrder) do
+                if entry.type == "category" and entry.key == swapKey then
+                    orderNewIdx = i
+                    break
+                end
+            end
+            if orderNewIdx then
+                itemOrder[orderCurrentIdx], itemOrder[orderNewIdx] = itemOrder[orderNewIdx], itemOrder[orderCurrentIdx]
+            end
+        end
+    end
+    
+    self:UpdateBar(barID)
+    self:UpdateConfigPanel()
+end
+
 -- Refresh bar dropdown
 function ExtraBars:RefreshBarList()
     if not self.configPanel then return end
@@ -1180,22 +1230,41 @@ function ExtraBars:UpdateConfigPanel()
     local currentStrata = barData.strata or "MEDIUM"
     UIDropDownMenu_SetText(panel.strataDropdown, strataLabels[currentStrata] or "Medium")
     
-    -- Update category checkboxes
+    -- Update category checkboxes and arrow button visibility
     for catKey, btn in pairs(panel.categoryButtons) do
-        local orderNum = nil
+        local isChecked = false
+        local orderIndex = nil
         for i, cat in ipairs(barData.categories) do
             if cat == catKey then
-                orderNum = i
+                isChecked = true
+                orderIndex = i
                 break
             end
         end
         
-        if orderNum then
-            btn.order:SetText("#" .. orderNum)
-            btn.check:SetChecked(true)
+        btn.check:SetChecked(isChecked)
+        
+        -- Show/hide and enable/disable arrow buttons based on selection and position
+        if isChecked and orderIndex then
+            btn.upBtn:Show()
+            btn.downBtn:Show()
+            -- Disable up if first, disable down if last
+            btn.upBtn:SetEnabled(orderIndex > 1)
+            btn.downBtn:SetEnabled(orderIndex < #barData.categories)
+            -- Visual feedback for disabled state
+            if orderIndex <= 1 then
+                btn.upBtn:SetAlpha(0.3)
+            else
+                btn.upBtn:SetAlpha(1)
+            end
+            if orderIndex >= #barData.categories then
+                btn.downBtn:SetAlpha(0.3)
+            else
+                btn.downBtn:SetAlpha(1)
+            end
         else
-            btn.order:SetText("")
-            btn.check:SetChecked(false)
+            btn.upBtn:Hide()
+            btn.downBtn:Hide()
         end
     end
     
