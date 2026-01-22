@@ -449,12 +449,57 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
     
     local allItems = {}
     
-    -- Iterate through categories in the user-specified order
-    for _, categoryKey in ipairs(barData.categories) do
-        local items = self:GetAvailableItemsForCategory(categoryKey)
-        for _, item in ipairs(items) do
-            item.category = categoryKey
-            table.insert(allItems, item)
+    -- Check if we have custom item ordering
+    if barData.itemOrder and #barData.itemOrder > 0 then
+        -- Use the ordered list
+        for _, orderEntry in ipairs(barData.itemOrder) do
+            if orderEntry.type == "category" then
+                -- Get items from the category
+                local items = self:GetAvailableItemsForCategory(orderEntry.key)
+                for _, item in ipairs(items) do
+                    item.category = orderEntry.key
+                    table.insert(allItems, item)
+                end
+            elseif orderEntry.type == "custom" then
+                -- Check if player has the custom item
+                if self:PlayerHasItem(orderEntry.key) then
+                    local itemName = C_Item.GetItemInfo(orderEntry.key)
+                    if itemName then
+                        table.insert(allItems, {
+                            id = orderEntry.key,
+                            name = itemName,
+                            type = "ITEM",
+                            category = "CUSTOM",
+                        })
+                    end
+                end
+            end
+        end
+    else
+        -- Legacy: use categories in order
+        for _, categoryKey in ipairs(barData.categories) do
+            local items = self:GetAvailableItemsForCategory(categoryKey)
+            for _, item in ipairs(items) do
+                item.category = categoryKey
+                table.insert(allItems, item)
+            end
+        end
+        
+        -- Also add custom items if any (legacy support)
+        if barData.customItems then
+            for _, customItem in ipairs(barData.customItems) do
+                if self:PlayerHasItem(customItem.id) then
+                    local itemName = C_Item.GetItemInfo(customItem.id)
+                    if itemName then
+                        table.insert(allItems, {
+                            id = customItem.id,
+                            name = itemName,
+                            type = "ITEM",
+                            category = "CUSTOM",
+                        })
+                    end
+                end
+            end
         end
     end
     

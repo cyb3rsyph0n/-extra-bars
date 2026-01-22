@@ -34,6 +34,8 @@ ExtraBars.barDefaults = {
     cols = 12,
     anchor = "TOPLEFT", -- TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT
     categories = {}, -- List of category keys in order
+    customItems = {}, -- List of custom items from inventory { id = itemID, name = itemName }
+    itemOrder = {}, -- Ordered list of all items: { type = "category"|"custom", key = catKey|itemID }
     position = {
         point = "TOPLEFT",
         relativePoint = "TOPLEFT",

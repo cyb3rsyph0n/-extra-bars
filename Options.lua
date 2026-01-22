@@ -49,10 +49,50 @@ local function CreateSlider(parent, name, label, minVal, maxVal, step, width)
     return container
 end
 
+-- Helper function to create a tab button
+local function CreateTabButton(parent, text, tabIndex, tabFrame)
+    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    btn:SetSize(90, 24)
+    btn:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    btn:SetBackdropColor(0.2, 0.2, 0.2, 0.9)
+    
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    btn.text:SetPoint("CENTER")
+    btn.text:SetText(text)
+    
+    btn.tabIndex = tabIndex
+    btn.tabFrame = tabFrame
+    
+    btn:SetScript("OnClick", function(self)
+        parent:GetParent():SelectTab(self.tabIndex)
+    end)
+    
+    btn:SetScript("OnEnter", function(self)
+        if not self.selected then
+            self:SetBackdropColor(0.3, 0.3, 0.3, 0.9)
+        end
+    end)
+    
+    btn:SetScript("OnLeave", function(self)
+        if not self.selected then
+            self:SetBackdropColor(0.2, 0.2, 0.2, 0.9)
+        end
+    end)
+    
+    return btn
+end
+
 -- Create the main configuration panel
 local function CreateConfigPanel()
     local frame = CreateFrame("Frame", "ExtraBarsConfigPanel", UIParent, "BackdropTemplate")
-    frame:SetSize(330, 630)
+    frame:SetSize(330, 680)
     frame:SetPoint("LEFT", 20, 0)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
@@ -276,18 +316,22 @@ local function CreateConfigPanel()
     
     settingsY = settingsY - 35
     
-    -- Categories section
-    local catTitle = frame.settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    catTitle:SetPoint("TOPLEFT", 20, settingsY)
-    catTitle:SetText("|cff00ff00Categories|r (drag to reorder)")
+    -- Tab buttons container
+    local tabContainer = CreateFrame("Frame", nil, frame.settingsFrame)
+    tabContainer:SetPoint("TOPLEFT", 15, settingsY)
+    tabContainer:SetSize(285, 28)
     
-    settingsY = settingsY - 20
+    frame.tabButtons = {}
+    frame.tabFrames = {}
     
-    -- Categories scroll frame container
-    local catScrollContainer = CreateFrame("Frame", nil, frame.settingsFrame, "BackdropTemplate")
-    catScrollContainer:SetPoint("TOPLEFT", 15, settingsY)
-    catScrollContainer:SetSize(285, 140)
-    catScrollContainer:SetBackdrop({
+    -- Create tab content frames first
+    local tabContentY = settingsY - 30
+    
+    -- Tab 1: Categories
+    local categoriesTab = CreateFrame("Frame", nil, frame.settingsFrame, "BackdropTemplate")
+    categoriesTab:SetPoint("TOPLEFT", 15, tabContentY)
+    categoriesTab:SetSize(285, 200)
+    categoriesTab:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         tile = true,
@@ -295,16 +339,91 @@ local function CreateConfigPanel()
         edgeSize = 8,
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
     })
-    catScrollContainer:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
+    categoriesTab:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
+    frame.tabFrames[1] = categoriesTab
     
-    -- Scroll frame
-    local catScrollFrame = CreateFrame("ScrollFrame", "EBCategoryScrollFrame", catScrollContainer, "UIPanelScrollFrameTemplate")
+    -- Tab 2: Inventory
+    local inventoryTab = CreateFrame("Frame", nil, frame.settingsFrame, "BackdropTemplate")
+    inventoryTab:SetPoint("TOPLEFT", 15, tabContentY)
+    inventoryTab:SetSize(285, 200)
+    inventoryTab:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    inventoryTab:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
+    inventoryTab:Hide()
+    frame.tabFrames[2] = inventoryTab
+    
+    -- Tab 3: Order
+    local orderTab = CreateFrame("Frame", nil, frame.settingsFrame, "BackdropTemplate")
+    orderTab:SetPoint("TOPLEFT", 15, tabContentY)
+    orderTab:SetSize(285, 200)
+    orderTab:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    orderTab:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
+    orderTab:Hide()
+    frame.tabFrames[3] = orderTab
+    
+    -- Create tab buttons
+    local tab1Btn = CreateTabButton(tabContainer, "Categories", 1, categoriesTab)
+    tab1Btn:SetPoint("TOPLEFT", 0, 0)
+    frame.tabButtons[1] = tab1Btn
+    
+    local tab2Btn = CreateTabButton(tabContainer, "Inventory", 2, inventoryTab)
+    tab2Btn:SetPoint("LEFT", tab1Btn, "RIGHT", 4, 0)
+    frame.tabButtons[2] = tab2Btn
+    
+    local tab3Btn = CreateTabButton(tabContainer, "Order", 3, orderTab)
+    tab3Btn:SetPoint("LEFT", tab2Btn, "RIGHT", 4, 0)
+    frame.tabButtons[3] = tab3Btn
+    
+    -- Tab selection function
+    function frame:SelectTab(index)
+        for i, btn in ipairs(self.tabButtons) do
+            if i == index then
+                btn.selected = true
+                btn:SetBackdropColor(0, 0.4, 0, 0.9)
+                btn.text:SetTextColor(1, 1, 1)
+                self.tabFrames[i]:Show()
+            else
+                btn.selected = false
+                btn:SetBackdropColor(0.2, 0.2, 0.2, 0.9)
+                btn.text:SetTextColor(0.7, 0.7, 0.7)
+                self.tabFrames[i]:Hide()
+            end
+        end
+        self.currentTab = index
+        
+        -- Refresh the content when switching tabs
+        if index == 2 then
+            ExtraBars:RefreshInventoryTab()
+        elseif index == 3 then
+            ExtraBars:RefreshOrderTab()
+        end
+    end
+    
+    -- Select first tab by default
+    frame:SelectTab(1)
+    
+    -- ==========================================
+    -- TAB 1: Categories Content
+    -- ==========================================
+    local catScrollFrame = CreateFrame("ScrollFrame", "EBCategoryScrollFrame", categoriesTab, "UIPanelScrollFrameTemplate")
     catScrollFrame:SetPoint("TOPLEFT", 4, -4)
     catScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
     
-    -- Scroll child (content frame)
     frame.catContainer = CreateFrame("Frame", nil, catScrollFrame)
-    frame.catContainer:SetSize(255, 1) -- Height will be set dynamically
+    frame.catContainer:SetSize(255, 1)
     catScrollFrame:SetScrollChild(frame.catContainer)
     
     frame.categoryButtons = {}
@@ -355,6 +474,8 @@ local function CreateConfigPanel()
                 end
                 if not found then
                     table.insert(categories, key)
+                    -- Also add to itemOrder
+                    ExtraBars:AddToItemOrder(barID, "category", key)
                 end
             else
                 for j = #categories, 1, -1 do
@@ -362,13 +483,15 @@ local function CreateConfigPanel()
                         table.remove(categories, j)
                     end
                 end
+                -- Also remove from itemOrder
+                ExtraBars:RemoveFromItemOrder(barID, "category", key)
             end
             
             ExtraBars:UpdateBar(barID)
             ExtraBars:UpdateConfigPanel()
         end)
         
-        -- Drag to reorder
+        -- Drag to reorder (categories within categories tab)
         catBtn:EnableMouse(true)
         catBtn:RegisterForDrag("LeftButton")
         
@@ -407,8 +530,41 @@ local function CreateConfigPanel()
         catY = catY - 24
     end
     
-    -- Set scroll child height based on total categories
     frame.catContainer:SetHeight(totalCategories * 24)
+    
+    -- ==========================================
+    -- TAB 2: Inventory Content
+    -- ==========================================
+    local invLabel = inventoryTab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    invLabel:SetPoint("TOPLEFT", 8, -8)
+    invLabel:SetText("Select items from your bags:")
+    
+    local invScrollFrame = CreateFrame("ScrollFrame", "EBInventoryScrollFrame", inventoryTab, "UIPanelScrollFrameTemplate")
+    invScrollFrame:SetPoint("TOPLEFT", 4, -24)
+    invScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    
+    frame.invContainer = CreateFrame("Frame", nil, invScrollFrame)
+    frame.invContainer:SetSize(255, 1)
+    invScrollFrame:SetScrollChild(frame.invContainer)
+    
+    frame.inventoryButtons = {}
+    
+    -- ==========================================
+    -- TAB 3: Order Content
+    -- ==========================================
+    local orderLabel = orderTab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    orderLabel:SetPoint("TOPLEFT", 8, -8)
+    orderLabel:SetText("Drag to reorder (categories & items):")
+    
+    local orderScrollFrame = CreateFrame("ScrollFrame", "EBOrderScrollFrame", orderTab, "UIPanelScrollFrameTemplate")
+    orderScrollFrame:SetPoint("TOPLEFT", 4, -24)
+    orderScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    
+    frame.orderContainer = CreateFrame("Frame", nil, orderScrollFrame)
+    frame.orderContainer:SetSize(255, 1)
+    orderScrollFrame:SetScrollChild(frame.orderContainer)
+    
+    frame.orderButtons = {}
     
     -- Reset Position button at bottom
     local resetPosBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
@@ -421,11 +577,8 @@ local function CreateConfigPanel()
             local barID = ExtraBars.selectedBarID
             local barData = ExtraBars.db.bars[barID]
             if barData then
-                -- Reset anchor to default
                 barData.anchor = "TOPLEFT"
-                -- Reset position to centered above character
                 barData.position = ExtraBars:GetDefaultPosition()
-                -- Update bar
                 ExtraBars:UpdateBar(barID)
                 ExtraBars:UpdateBarPosition(barID)
                 ExtraBars:UpdateConfigPanel()
@@ -451,7 +604,333 @@ local function CreateConfigPanel()
     return frame
 end
 
--- Swap category order
+-- Helper to add an item to the bar's itemOrder
+function ExtraBars:AddToItemOrder(barID, itemType, key)
+    local barData = self.db.bars[barID]
+    if not barData then return end
+    
+    barData.itemOrder = barData.itemOrder or {}
+    
+    -- Check if already exists
+    for _, entry in ipairs(barData.itemOrder) do
+        if entry.type == itemType and entry.key == key then
+            return
+        end
+    end
+    
+    table.insert(barData.itemOrder, { type = itemType, key = key })
+end
+
+-- Helper to remove an item from the bar's itemOrder
+function ExtraBars:RemoveFromItemOrder(barID, itemType, key)
+    local barData = self.db.bars[barID]
+    if not barData or not barData.itemOrder then return end
+    
+    for i = #barData.itemOrder, 1, -1 do
+        local entry = barData.itemOrder[i]
+        if entry.type == itemType and entry.key == key then
+            table.remove(barData.itemOrder, i)
+        end
+    end
+end
+
+-- Refresh the inventory tab with items from bags
+function ExtraBars:RefreshInventoryTab()
+    local panel = self.configPanel
+    if not panel then return end
+    
+    local barID = self.selectedBarID
+    if not barID or not self.db.bars[barID] then return end
+    
+    local barData = self.db.bars[barID]
+    barData.customItems = barData.customItems or {}
+    
+    -- Clear existing buttons
+    for _, btn in pairs(panel.inventoryButtons) do
+        btn:Hide()
+        btn:SetParent(nil)
+    end
+    wipe(panel.inventoryButtons)
+    
+    -- Get all items from bags (only items with on-use effects)
+    local bagItems = {}
+    local seenItems = {}
+    
+    for bag = 0, 4 do
+        local numSlots = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, numSlots do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            if itemInfo and itemInfo.itemID and not seenItems[itemInfo.itemID] then
+                -- Check if item has on-use effect
+                local spellName = GetItemSpell(itemInfo.itemID)
+                if spellName then
+                    seenItems[itemInfo.itemID] = true
+                    local name, _, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemInfo.itemID)
+                    if name then
+                        table.insert(bagItems, {
+                            id = itemInfo.itemID,
+                            name = name,
+                            icon = icon,
+                            quality = quality or 1,
+                        })
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Sort by quality (descending) then name
+    table.sort(bagItems, function(a, b)
+        if a.quality ~= b.quality then
+            return a.quality > b.quality
+        end
+        return a.name < b.name
+    end)
+    
+    local invY = 0
+    for i, item in ipairs(bagItems) do
+        local btn = CreateFrame("Button", nil, panel.invContainer, "BackdropTemplate")
+        btn:SetSize(255, 24)
+        btn:SetPoint("TOPLEFT", 0, invY)
+        btn:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true,
+            tileSize = 8,
+            edgeSize = 8,
+            insets = { left = 2, right = 2, top = 2, bottom = 2 },
+        })
+        btn:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
+        btn.itemID = item.id
+        
+        btn.check = CreateFrame("CheckButton", nil, btn, "UICheckButtonTemplate")
+        btn.check:SetSize(22, 22)
+        btn.check:SetPoint("LEFT", 2, 0)
+        
+        btn.iconTexture = btn:CreateTexture(nil, "ARTWORK")
+        btn.iconTexture:SetSize(18, 18)
+        btn.iconTexture:SetPoint("LEFT", btn.check, "RIGHT", 2, 0)
+        btn.iconTexture:SetTexture(item.icon)
+        
+        btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        btn.label:SetPoint("LEFT", btn.iconTexture, "RIGHT", 4, 0)
+        btn.label:SetPoint("RIGHT", -8, 0)
+        btn.label:SetJustifyH("LEFT")
+        btn.label:SetText(item.name)
+        
+        -- Set quality color
+        local r, g, b = C_Item.GetItemQualityColor(item.quality)
+        btn.label:SetTextColor(r, g, b)
+        
+        -- Check if already selected
+        local isSelected = false
+        for _, customItem in ipairs(barData.customItems) do
+            if customItem.id == item.id then
+                isSelected = true
+                break
+            end
+        end
+        btn.check:SetChecked(isSelected)
+        
+        btn.check:SetScript("OnClick", function(self)
+            local checked = self:GetChecked()
+            local itemID = btn.itemID
+            
+            if checked then
+                -- Add to custom items
+                local found = false
+                for _, ci in ipairs(barData.customItems) do
+                    if ci.id == itemID then found = true break end
+                end
+                if not found then
+                    table.insert(barData.customItems, { id = itemID, name = item.name })
+                    ExtraBars:AddToItemOrder(barID, "custom", itemID)
+                end
+            else
+                -- Remove from custom items
+                for j = #barData.customItems, 1, -1 do
+                    if barData.customItems[j].id == itemID then
+                        table.remove(barData.customItems, j)
+                    end
+                end
+                ExtraBars:RemoveFromItemOrder(barID, "custom", itemID)
+            end
+            
+            ExtraBars:UpdateBar(barID)
+        end)
+        
+        btn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(0.25, 0.25, 0.25, 0.9)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetItemByID(self.itemID)
+            GameTooltip:Show()
+        end)
+        
+        btn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
+            GameTooltip:Hide()
+        end)
+        
+        panel.inventoryButtons[i] = btn
+        invY = invY - 26
+    end
+    
+    panel.invContainer:SetHeight(math.max(1, #bagItems * 26))
+end
+
+-- Refresh the order tab
+function ExtraBars:RefreshOrderTab()
+    local panel = self.configPanel
+    if not panel then return end
+    
+    local barID = self.selectedBarID
+    if not barID or not self.db.bars[barID] then return end
+    
+    local barData = self.db.bars[barID]
+    
+    -- Clear existing buttons
+    for _, btn in pairs(panel.orderButtons) do
+        btn:Hide()
+        btn:SetParent(nil)
+    end
+    wipe(panel.orderButtons)
+    
+    -- Build the order list from itemOrder or legacy categories+customItems
+    local orderList = {}
+    
+    if barData.itemOrder and #barData.itemOrder > 0 then
+        for _, entry in ipairs(barData.itemOrder) do
+            table.insert(orderList, entry)
+        end
+    else
+        -- Build from legacy data
+        barData.itemOrder = {}
+        for _, catKey in ipairs(barData.categories) do
+            local entry = { type = "category", key = catKey }
+            table.insert(orderList, entry)
+            table.insert(barData.itemOrder, entry)
+        end
+        if barData.customItems then
+            for _, customItem in ipairs(barData.customItems) do
+                local entry = { type = "custom", key = customItem.id }
+                table.insert(orderList, entry)
+                table.insert(barData.itemOrder, entry)
+            end
+        end
+    end
+    
+    local orderY = 0
+    for i, entry in ipairs(orderList) do
+        local btn = CreateFrame("Button", nil, panel.orderContainer, "BackdropTemplate")
+        btn:SetSize(255, 24)
+        btn:SetPoint("TOPLEFT", 0, orderY)
+        btn:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true,
+            tileSize = 8,
+            edgeSize = 8,
+            insets = { left = 2, right = 2, top = 2, bottom = 2 },
+        })
+        
+        if entry.type == "category" then
+            btn:SetBackdropColor(0.1, 0.2, 0.1, 0.9)
+        else
+            btn:SetBackdropColor(0.2, 0.1, 0.2, 0.9)
+        end
+        
+        btn.orderIndex = i
+        btn.entryType = entry.type
+        btn.entryKey = entry.key
+        
+        btn.indexLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        btn.indexLabel:SetPoint("LEFT", 8, 0)
+        btn.indexLabel:SetText(i .. ".")
+        btn.indexLabel:SetTextColor(0.5, 0.5, 0.5)
+        
+        btn.iconTexture = btn:CreateTexture(nil, "ARTWORK")
+        btn.iconTexture:SetSize(18, 18)
+        btn.iconTexture:SetPoint("LEFT", btn.indexLabel, "RIGHT", 4, 0)
+        
+        btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        btn.label:SetPoint("LEFT", btn.iconTexture, "RIGHT", 4, 0)
+        btn.label:SetPoint("RIGHT", -8, 0)
+        btn.label:SetJustifyH("LEFT")
+        
+        if entry.type == "category" then
+            local catData = self.Categories[entry.key]
+            btn.iconTexture:SetTexture("Interface\\Icons\\INV_Misc_Bag_10")
+            btn.label:SetText(catData and catData.name or entry.key)
+            btn.label:SetTextColor(0.5, 1, 0.5)
+        else
+            local name, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(entry.key)
+            btn.iconTexture:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+            btn.label:SetText(name or "Item " .. entry.key)
+            btn.label:SetTextColor(0.8, 0.6, 1)
+        end
+        
+        -- Drag to reorder
+        btn:EnableMouse(true)
+        btn:RegisterForDrag("LeftButton")
+        
+        btn:SetScript("OnDragStart", function(self)
+            self.dragging = true
+            self:SetBackdropColor(0.4, 0.4, 0, 0.9)
+        end)
+        
+        btn:SetScript("OnDragStop", function(self)
+            self.dragging = false
+            if self.entryType == "category" then
+                self:SetBackdropColor(0.1, 0.2, 0.1, 0.9)
+            else
+                self:SetBackdropColor(0.2, 0.1, 0.2, 0.9)
+            end
+        end)
+        
+        btn:SetScript("OnEnter", function(self)
+            if not self.dragging then
+                self:SetBackdropColor(0.3, 0.3, 0.3, 0.9)
+            end
+            -- Check if another button is being dragged
+            for _, otherBtn in pairs(panel.orderButtons) do
+                if otherBtn.dragging and otherBtn ~= self then
+                    ExtraBars:SwapOrderItems(barID, otherBtn.orderIndex, self.orderIndex)
+                    otherBtn.dragging = false
+                    ExtraBars:RefreshOrderTab()
+                    ExtraBars:UpdateBar(barID)
+                    return
+                end
+            end
+        end)
+        
+        btn:SetScript("OnLeave", function(self)
+            if not self.dragging then
+                if self.entryType == "category" then
+                    self:SetBackdropColor(0.1, 0.2, 0.1, 0.9)
+                else
+                    self:SetBackdropColor(0.2, 0.1, 0.2, 0.9)
+                end
+            end
+        end)
+        
+        panel.orderButtons[i] = btn
+        orderY = orderY - 26
+    end
+    
+    panel.orderContainer:SetHeight(math.max(1, #orderList * 26))
+end
+
+-- Swap items in the order list
+function ExtraBars:SwapOrderItems(barID, idx1, idx2)
+    local barData = self.db.bars[barID]
+    if not barData or not barData.itemOrder then return end
+    
+    if idx1 > 0 and idx1 <= #barData.itemOrder and idx2 > 0 and idx2 <= #barData.itemOrder then
+        barData.itemOrder[idx1], barData.itemOrder[idx2] = barData.itemOrder[idx2], barData.itemOrder[idx1]
+    end
+end
+
+-- Swap category order (for categories tab drag-reorder)
 function ExtraBars:SwapCategories(key1, key2)
     local barID = self.selectedBarID
     if not barID or not self.db.bars[barID] then return end
@@ -466,6 +945,20 @@ function ExtraBars:SwapCategories(key1, key2)
     
     if idx1 and idx2 then
         categories[idx1], categories[idx2] = categories[idx2], categories[idx1]
+        
+        -- Also swap in itemOrder
+        local itemOrder = self.db.bars[barID].itemOrder
+        if itemOrder then
+            local orderIdx1, orderIdx2
+            for i, entry in ipairs(itemOrder) do
+                if entry.type == "category" and entry.key == key1 then orderIdx1 = i end
+                if entry.type == "category" and entry.key == key2 then orderIdx2 = i end
+            end
+            if orderIdx1 and orderIdx2 then
+                itemOrder[orderIdx1], itemOrder[orderIdx2] = itemOrder[orderIdx2], itemOrder[orderIdx1]
+            end
+        end
+        
         self:UpdateBar(barID)
         self:UpdateConfigPanel()
     end
@@ -551,7 +1044,7 @@ function ExtraBars:UpdateConfigPanel()
     panel.rowsContainer.slider:SetValue(barData.rows)
     panel.colsContainer.slider:SetValue(barData.cols)
     
-    -- Update anchor dropdown (handle legacy data where anchor might be a table)
+    -- Update anchor dropdown
     local anchorLabels = { TOPLEFT = "Top Left", TOPRIGHT = "Top Right", BOTTOMLEFT = "Bottom Left", BOTTOMRIGHT = "Bottom Right" }
     local currentAnchor = barData.anchor
     if type(currentAnchor) ~= "string" then
@@ -577,6 +1070,13 @@ function ExtraBars:UpdateConfigPanel()
             btn.check:SetChecked(false)
         end
     end
+    
+    -- Refresh inventory and order tabs if visible
+    if panel.currentTab == 2 then
+        self:RefreshInventoryTab()
+    elseif panel.currentTab == 3 then
+        self:RefreshOrderTab()
+    end
 end
 
 -- Show config panel
@@ -595,7 +1095,7 @@ function ExtraBars:ShowConfigPanel(barID)
         end
     end
     
-    -- Set the selected bar directly (don't call SelectBar to avoid recursion)
+    -- Set the selected bar directly
     if barID then
         self.selectedBarID = barID
     end
