@@ -50,7 +50,7 @@ local function CreateSlider(parent, name, label, minVal, maxVal, step, width)
 end
 
 -- Helper function to create a tab button
-local function CreateTabButton(parent, text, tabIndex, tabFrame)
+local function CreateTabButton(parent, text, tabIndex, tabFrame, mainFrame)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetSize(90, 24)
     btn:SetBackdrop({
@@ -69,9 +69,10 @@ local function CreateTabButton(parent, text, tabIndex, tabFrame)
     
     btn.tabIndex = tabIndex
     btn.tabFrame = tabFrame
+    btn.mainFrame = mainFrame
     
     btn:SetScript("OnClick", function(self)
-        parent:GetParent():SelectTab(self.tabIndex)
+        self.mainFrame:SelectTab(self.tabIndex)
     end)
     
     btn:SetScript("OnEnter", function(self)
@@ -375,15 +376,15 @@ local function CreateConfigPanel()
     frame.tabFrames[3] = orderTab
     
     -- Create tab buttons
-    local tab1Btn = CreateTabButton(tabContainer, "Categories", 1, categoriesTab)
+    local tab1Btn = CreateTabButton(tabContainer, "Categories", 1, categoriesTab, frame)
     tab1Btn:SetPoint("TOPLEFT", 0, 0)
     frame.tabButtons[1] = tab1Btn
     
-    local tab2Btn = CreateTabButton(tabContainer, "Inventory", 2, inventoryTab)
+    local tab2Btn = CreateTabButton(tabContainer, "Inventory", 2, inventoryTab, frame)
     tab2Btn:SetPoint("LEFT", tab1Btn, "RIGHT", 4, 0)
     frame.tabButtons[2] = tab2Btn
     
-    local tab3Btn = CreateTabButton(tabContainer, "Order", 3, orderTab)
+    local tab3Btn = CreateTabButton(tabContainer, "Order", 3, orderTab, frame)
     tab3Btn:SetPoint("LEFT", tab2Btn, "RIGHT", 4, 0)
     frame.tabButtons[3] = tab3Btn
     
