@@ -635,6 +635,14 @@ function ExtraBars:RemoveFromItemOrder(barID, itemType, key)
     end
 end
 
+-- Helper to get base item name (strip rank suffixes like " R2", " R3", etc.)
+function ExtraBars:GetBaseItemName(name)
+    if not name then return name end
+    -- Remove common rank patterns: " R2", " R3", " Rank 2", " Rank 3", etc.
+    local baseName = name:gsub(" R%d+$", ""):gsub(" Rank %d+$", ""):gsub(" %*+$", "")
+    return baseName
+end
+
 -- Refresh the inventory tab with items from bags
 function ExtraBars:RefreshInventoryTab()
     local panel = self.configPanel
@@ -654,7 +662,7 @@ function ExtraBars:RefreshInventoryTab()
     wipe(panel.inventoryButtons)
     
     -- Get all items from bags (only items with on-use effects)
-    local bagItems = {}
+    local rawBagItems = {}
     local seenItems = {}
     
     for bag = 0, 4 do
@@ -668,9 +676,10 @@ function ExtraBars:RefreshInventoryTab()
                     seenItems[itemInfo.itemID] = true
                     local name, _, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemInfo.itemID)
                     if name then
-                        table.insert(bagItems, {
+                        table.insert(rawBagItems, {
                             id = itemInfo.itemID,
                             name = name,
+                            baseName = self:GetBaseItemName(name),
                             icon = icon,
                             quality = quality or 1,
                         })
@@ -680,12 +689,44 @@ function ExtraBars:RefreshInventoryTab()
         end
     end
     
+    -- Group items by base name (consolidate ranks)
+    local groupedItems = {}
+    local groupOrder = {}
+    
+    for _, item in ipairs(rawBagItems) do
+        local baseName = item.baseName
+        if not groupedItems[baseName] then
+            groupedItems[baseName] = {
+                baseName = baseName,
+                displayName = baseName,
+                icon = item.icon,
+                quality = item.quality,
+                itemIds = {},
+                primaryId = item.id, -- First one found
+            }
+            table.insert(groupOrder, baseName)
+        end
+        -- Add this item ID to the group
+        table.insert(groupedItems[baseName].itemIds, item.id)
+        -- Keep highest quality icon/quality
+        if item.quality > groupedItems[baseName].quality then
+            groupedItems[baseName].quality = item.quality
+            groupedItems[baseName].icon = item.icon
+        end
+    end
+    
+    -- Build final list from grouped items
+    local bagItems = {}
+    for _, baseName in ipairs(groupOrder) do
+        table.insert(bagItems, groupedItems[baseName])
+    end
+    
     -- Sort by quality (descending) then name
     table.sort(bagItems, function(a, b)
         if a.quality ~= b.quality then
             return a.quality > b.quality
         end
-        return a.name < b.name
+        return a.baseName < b.baseName
     end)
     
     local invY = 0
@@ -702,7 +743,9 @@ function ExtraBars:RefreshInventoryTab()
             insets = { left = 2, right = 2, top = 2, bottom = 2 },
         })
         btn:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
-        btn.itemID = item.id
+        btn.itemIds = item.itemIds
+        btn.baseName = item.baseName
+        btn.primaryId = item.primaryId
         
         btn.check = CreateFrame("CheckButton", nil, btn, "UICheckButtonTemplate")
         btn.check:SetSize(22, 22)
@@ -717,16 +760,21 @@ function ExtraBars:RefreshInventoryTab()
         btn.label:SetPoint("LEFT", btn.iconTexture, "RIGHT", 4, 0)
         btn.label:SetPoint("RIGHT", -8, 0)
         btn.label:SetJustifyH("LEFT")
-        btn.label:SetText(item.name)
+        -- Show rank count if multiple ranks exist
+        local displayText = item.displayName
+        if #item.itemIds > 1 then
+            displayText = displayText .. " |cff888888(x" .. #item.itemIds .. " ranks)|r"
+        end
+        btn.label:SetText(displayText)
         
         -- Set quality color
         local r, g, b = C_Item.GetItemQualityColor(item.quality)
         btn.label:SetTextColor(r, g, b)
         
-        -- Check if already selected
+        -- Check if already selected (check by baseName match in customItems)
         local isSelected = false
         for _, customItem in ipairs(barData.customItems) do
-            if customItem.id == item.id then
+            if customItem.baseName == item.baseName then
                 isSelected = true
                 break
             end
@@ -735,26 +783,33 @@ function ExtraBars:RefreshInventoryTab()
         
         btn.check:SetScript("OnClick", function(self)
             local checked = self:GetChecked()
-            local itemID = btn.itemID
+            local baseName = btn.baseName
+            local itemIds = btn.itemIds
+            local primaryId = btn.primaryId
             
             if checked then
-                -- Add to custom items
+                -- Add to custom items (store baseName and all item IDs)
                 local found = false
                 for _, ci in ipairs(barData.customItems) do
-                    if ci.id == itemID then found = true break end
+                    if ci.baseName == baseName then found = true break end
                 end
                 if not found then
-                    table.insert(barData.customItems, { id = itemID, name = item.name })
-                    ExtraBars:AddToItemOrder(barID, "custom", itemID)
+                    table.insert(barData.customItems, { 
+                        id = primaryId, 
+                        name = baseName,
+                        baseName = baseName,
+                        itemIds = itemIds 
+                    })
+                    ExtraBars:AddToItemOrder(barID, "custom", baseName)
                 end
             else
                 -- Remove from custom items
                 for j = #barData.customItems, 1, -1 do
-                    if barData.customItems[j].id == itemID then
+                    if barData.customItems[j].baseName == baseName then
                         table.remove(barData.customItems, j)
                     end
                 end
-                ExtraBars:RemoveFromItemOrder(barID, "custom", itemID)
+                ExtraBars:RemoveFromItemOrder(barID, "custom", baseName)
             end
             
             ExtraBars:UpdateBar(barID)
@@ -763,7 +818,7 @@ function ExtraBars:RefreshInventoryTab()
         btn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(0.25, 0.25, 0.25, 0.9)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetItemByID(self.itemID)
+            GameTooltip:SetItemByID(self.primaryId)
             GameTooltip:Show()
         end)
         
@@ -813,7 +868,8 @@ function ExtraBars:RefreshOrderTab()
         end
         if barData.customItems then
             for _, customItem in ipairs(barData.customItems) do
-                local entry = { type = "custom", key = customItem.id }
+                local key = customItem.baseName or customItem.id
+                local entry = { type = "custom", key = key }
                 table.insert(orderList, entry)
                 table.insert(barData.itemOrder, entry)
             end
@@ -864,9 +920,40 @@ function ExtraBars:RefreshOrderTab()
             btn.label:SetText(catData and catData.name or entry.key)
             btn.label:SetTextColor(0.5, 1, 0.5)
         else
-            local name, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(entry.key)
-            btn.iconTexture:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-            btn.label:SetText(name or "Item " .. entry.key)
+            -- Custom item - key is baseName, find the customItem data
+            local customItem = nil
+            if barData.customItems then
+                for _, ci in ipairs(barData.customItems) do
+                    if ci.baseName == entry.key or ci.id == entry.key then
+                        customItem = ci
+                        break
+                    end
+                end
+            end
+            
+            local displayName = entry.key
+            local icon = "Interface\\Icons\\INV_Misc_QuestionMark"
+            
+            if customItem then
+                displayName = customItem.baseName or customItem.name
+                -- Try to get icon from first available item
+                local iconId = customItem.id
+                if customItem.itemIds and #customItem.itemIds > 0 then
+                    iconId = customItem.itemIds[1]
+                end
+                local _, _, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(iconId)
+                if itemIcon then
+                    icon = itemIcon
+                end
+            else
+                -- Legacy: key might be an item ID
+                local name, _, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(entry.key)
+                if name then displayName = name end
+                if itemIcon then icon = itemIcon end
+            end
+            
+            btn.iconTexture:SetTexture(icon)
+            btn.label:SetText(displayName)
             btn.label:SetTextColor(0.8, 0.6, 1)
         end
         

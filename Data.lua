@@ -461,16 +461,45 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
                     table.insert(allItems, item)
                 end
             elseif orderEntry.type == "custom" then
-                -- Check if player has the custom item
-                if self:PlayerHasItem(orderEntry.key) then
-                    local itemName = C_Item.GetItemInfo(orderEntry.key)
-                    if itemName then
-                        table.insert(allItems, {
-                            id = orderEntry.key,
-                            name = itemName,
-                            type = "ITEM",
-                            category = "CUSTOM",
-                        })
+                -- Find the custom item by baseName (key is now baseName)
+                local customItem = nil
+                if barData.customItems then
+                    for _, ci in ipairs(barData.customItems) do
+                        if ci.baseName == orderEntry.key or ci.id == orderEntry.key then
+                            customItem = ci
+                            break
+                        end
+                    end
+                end
+                
+                if customItem then
+                    -- Check if player has any of the ranked items
+                    local availableId = nil
+                    if customItem.itemIds then
+                        -- New format: check all item IDs
+                        for _, itemId in ipairs(customItem.itemIds) do
+                            if self:PlayerHasItem(itemId) then
+                                availableId = itemId
+                                break
+                            end
+                        end
+                    else
+                        -- Legacy format: single item ID
+                        if self:PlayerHasItem(customItem.id) then
+                            availableId = customItem.id
+                        end
+                    end
+                    
+                    if availableId then
+                        local itemName = C_Item.GetItemInfo(availableId)
+                        if itemName then
+                            table.insert(allItems, {
+                                id = availableId,
+                                name = itemName,
+                                type = "ITEM",
+                                category = "CUSTOM",
+                            })
+                        end
                     end
                 end
             end
@@ -488,11 +517,27 @@ function ExtraBars:GetAllAvailableItemsForBar(barID)
         -- Also add custom items if any (legacy support)
         if barData.customItems then
             for _, customItem in ipairs(barData.customItems) do
-                if self:PlayerHasItem(customItem.id) then
-                    local itemName = C_Item.GetItemInfo(customItem.id)
+                local availableId = nil
+                if customItem.itemIds then
+                    -- New format: check all item IDs
+                    for _, itemId in ipairs(customItem.itemIds) do
+                        if self:PlayerHasItem(itemId) then
+                            availableId = itemId
+                            break
+                        end
+                    end
+                else
+                    -- Legacy format: single item ID
+                    if self:PlayerHasItem(customItem.id) then
+                        availableId = customItem.id
+                    end
+                end
+                
+                if availableId then
+                    local itemName = C_Item.GetItemInfo(availableId)
                     if itemName then
                         table.insert(allItems, {
-                            id = customItem.id,
+                            id = availableId,
                             name = itemName,
                             type = "ITEM",
                             category = "CUSTOM",
