@@ -323,6 +323,11 @@ function ExtraBars:UpdateBar(barID)
         button:SetSize(iconSize, iconSize)
         button.itemID = item.id
         button.itemType = item.type
+        button.isPlaceholder = nil
+        
+        -- Restore hover/click effects (in case this was a placeholder)
+        button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
         
         -- Position button in grid based on anchor
         local row = math.floor((buttonIndex - 1) / cols)
@@ -461,6 +466,11 @@ function ExtraBars:UpdateBar(barID)
         button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
         button.count:SetText("")
         button.cooldown:Clear()
+        
+        -- Remove hover/click effects so it doesn't look interactive
+        button:SetHighlightTexture(nil)
+        button:SetPushedTexture(nil)
+        button.isPlaceholder = true
         
         button:Show()
     end
