@@ -202,6 +202,11 @@ function ExtraBars:OnExitEditMode()
             self:UpdateBar(barID)
         end
     end
+    
+    -- Close config panel when exiting Edit Mode
+    if self.configPanel and self.configPanel:IsShown() then
+        self.configPanel:Hide()
+    end
 end
 
 -- Update edit mode state based on current mode
