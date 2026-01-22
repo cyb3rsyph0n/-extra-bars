@@ -237,12 +237,7 @@ function ExtraBars:CreateButton(bar, index, iconSize)
     button.count:SetPoint("BOTTOMRIGHT", -2, 2)
     button.count:SetJustifyH("RIGHT")
     
-    -- Highlight texture (subtle glow on hover)
-    local highlight = button:CreateTexture(nil, "HIGHLIGHT")
-    highlight:SetAllPoints()
-    highlight:SetColorTexture(1, 1, 1, 0.3)
-    highlight:SetBlendMode("ADD")
-    button.highlightTexture = highlight
+    -- No highlight - flat icon appearance
     
     -- Set up tooltip
     button:SetScript("OnEnter", function(self)
@@ -318,11 +313,6 @@ function ExtraBars:UpdateBar(barID)
         button.itemID = item.id
         button.itemType = item.type
         button.isPlaceholder = nil
-        
-        -- Restore hover effects (in case this was a placeholder)
-        if button.highlightTexture then
-            button.highlightTexture:Show()
-        end
         
         -- Position button in grid based on anchor
         local row = math.floor((buttonIndex - 1) / cols)
@@ -461,11 +451,6 @@ function ExtraBars:UpdateBar(barID)
         button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
         button.count:SetText("")
         button.cooldown:Clear()
-        
-        -- Remove hover effects so it doesn't look interactive
-        if button.highlightTexture then
-            button.highlightTexture:Hide()
-        end
         button.isPlaceholder = true
         
         button:Show()
