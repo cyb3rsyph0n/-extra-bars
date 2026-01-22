@@ -155,15 +155,7 @@ function ExtraBars:ToggleConfigPanel()
     if self.configPanel then
         if self.configPanel:IsShown() then
             self.configPanel:Hide()
-            -- Exit Edit Mode when closing config panel
-            if EditModeManagerFrame and EditModeManagerFrame:IsEditModeActive() then
-                EditModeManagerFrame:ExitEditMode()
-            end
         else
-            -- Enter Edit Mode when opening config panel
-            if EditModeManagerFrame and not EditModeManagerFrame:IsEditModeActive() then
-                EditModeManagerFrame:EnterEditMode()
-            end
             self:ShowConfigPanel()
         end
     end
