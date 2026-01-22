@@ -414,6 +414,57 @@ function ExtraBars:UpdateBar(barID)
         button:Show()
     end
     
+    -- If no items, show a placeholder button
+    if buttonIndex == 0 then
+        buttonIndex = 1
+        
+        -- Create placeholder button if needed
+        if not bar.buttons[1] then
+            bar.buttons[1] = self:CreateButton(bar, 1, iconSize)
+        end
+        
+        local button = bar.buttons[1]
+        button:SetSize(iconSize, iconSize)
+        button.itemID = nil
+        button.itemType = nil
+        button.slotID = nil
+        
+        -- Clear any attributes
+        button:SetAttribute("type", nil)
+        button:SetAttribute("spell", nil)
+        button:SetAttribute("item", nil)
+        button:SetAttribute("macrotext", nil)
+        
+        -- Position placeholder at the anchor point
+        local anchor = barData.anchor
+        if type(anchor) ~= "string" then
+            anchor = "TOPLEFT"
+        end
+        local anchorPoint = anchor
+        local xOffset = padding
+        local yOffset = -padding
+        if anchor == "TOPRIGHT" then
+            xOffset = -padding
+            yOffset = -padding
+        elseif anchor == "BOTTOMLEFT" then
+            xOffset = padding
+            yOffset = padding
+        elseif anchor == "BOTTOMRIGHT" then
+            xOffset = -padding
+            yOffset = padding
+        end
+        
+        button:ClearAllPoints()
+        button:SetPoint(anchorPoint, bar, anchorPoint, xOffset, yOffset)
+        
+        -- Set placeholder appearance (question mark icon)
+        button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+        button.count:SetText("")
+        button.cooldown:Clear()
+        
+        button:Show()
+    end
+    
     -- Calculate bar size
     local usedCols = math.min(buttonIndex, cols)
     local usedRows = math.ceil(buttonIndex / cols)
@@ -423,12 +474,6 @@ function ExtraBars:UpdateBar(barID)
     
     local barWidth = usedCols * (iconSize + padding) + padding
     local barHeight = usedRows * (iconSize + padding) + padding
-    
-    -- Minimum size for empty bars (visible in edit mode)
-    if buttonIndex == 0 then
-        barWidth = 80
-        barHeight = 50
-    end
     
     bar:SetSize(barWidth, barHeight)
     bar:Show()
