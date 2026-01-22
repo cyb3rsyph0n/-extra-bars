@@ -470,7 +470,7 @@ local function CreateConfigPanel()
     catScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
     
     frame.catContainer = CreateFrame("Frame", nil, catScrollFrame)
-    frame.catContainer:SetSize(235, 1)
+    frame.catContainer:SetSize(215, 1)
     catScrollFrame:SetScrollChild(frame.catContainer)
     
     frame.categoryButtons = {}
@@ -482,7 +482,7 @@ local function CreateConfigPanel()
         local catData = ExtraBars.Categories[catKey]
         
         local catBtn = CreateFrame("Button", nil, frame.catContainer, "BackdropTemplate")
-        catBtn:SetSize(235, 22)
+        catBtn:SetSize(215, 22)
         catBtn:SetPoint("TOPLEFT", 0, catY)
         catBtn:SetBackdrop({
             bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -583,7 +583,7 @@ local function CreateConfigPanel()
     invScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
     
     frame.invContainer = CreateFrame("Frame", nil, invScrollFrame)
-    frame.invContainer:SetSize(235, 1)
+    frame.invContainer:SetSize(215, 1)
     invScrollFrame:SetScrollChild(frame.invContainer)
     
     frame.inventoryButtons = {}
@@ -600,7 +600,7 @@ local function CreateConfigPanel()
     orderScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
     
     frame.orderContainer = CreateFrame("Frame", nil, orderScrollFrame)
-    frame.orderContainer:SetSize(235, 1)
+    frame.orderContainer:SetSize(215, 1)
     orderScrollFrame:SetScrollChild(frame.orderContainer)
     
     frame.orderButtons = {}
@@ -759,7 +759,7 @@ function ExtraBars:RefreshInventoryTab()
     local invY = 0
     for i, item in ipairs(bagItems) do
         local btn = CreateFrame("Button", nil, panel.invContainer, "BackdropTemplate")
-        btn:SetSize(235, 24)
+        btn:SetSize(215, 24)
         btn:SetPoint("TOPLEFT", 0, invY)
         btn:SetBackdrop({
             bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -906,7 +906,7 @@ function ExtraBars:RefreshOrderTab()
     local orderY = 0
     for i, entry in ipairs(orderList) do
         local btn = CreateFrame("Button", nil, panel.orderContainer, "BackdropTemplate")
-        btn:SetSize(235, 24)
+        btn:SetSize(215, 24)
         btn:SetPoint("TOPLEFT", 0, orderY)
         btn:SetBackdrop({
             bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
