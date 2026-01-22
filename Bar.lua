@@ -634,6 +634,8 @@ function ExtraBars:UpdateBarCooldownsAndCounts(barID)
             -- Update count for items (skip during combat as GetItemCount may return protected values)
             if not inCombat and button.itemType == "ITEM" then
                 local count = C_Item.GetItemCount(button.itemID, true, false)
+                -- Cache the count for detecting usage during combat
+                button.cachedItemCount = count
                 if count > 1 then
                     button.count:SetText(count)
                 elseif count == 0 then
@@ -829,11 +831,19 @@ function ExtraBars:CheckItemCooldownsInCombat()
         if bar.buttons then
             for _, button in ipairs(bar.buttons) do
                 if button.itemType == "ITEM" and button.itemID and button.baseCDDuration then
-                    -- If we have a cached duration but no active cooldown, assume it just started
-                    if (not button.cachedCDStart or button.cachedCDStart == 0) and button.baseCDDuration > 1.5 then
-                        button.cachedCDStart = now
-                        button.cachedCDDuration = button.baseCDDuration
-                        button.cooldown:SetCooldown(now, button.baseCDDuration)
+                    -- Check if item count decreased (item was consumed)
+                    local currentCount = C_Item.GetItemCount(button.itemID, true, false)
+                    local previousCount = button.cachedItemCount or 0
+                    
+                    if currentCount < previousCount then
+                        -- Item was consumed, start cooldown
+                        if button.baseCDDuration > 1.5 then
+                            button.cachedCDStart = now
+                            button.cachedCDDuration = button.baseCDDuration
+                            button.cooldown:SetCooldown(now, button.baseCDDuration)
+                        end
+                        -- Update cached count
+                        button.cachedItemCount = currentCount
                     end
                 end
             end
