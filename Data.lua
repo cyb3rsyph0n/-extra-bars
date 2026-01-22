@@ -327,6 +327,7 @@ ExtraBars.CategoryOrder = {
     "HEALTH_POTIONS",
     "FLASKS",
     "COMBAT_POTIONS",
+    "TRINKETS",
 }
 
 -- Helper function to check if player knows a spell
