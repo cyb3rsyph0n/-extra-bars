@@ -467,7 +467,7 @@ local function CreateConfigPanel()
     -- ==========================================
     local catScrollFrame = CreateFrame("ScrollFrame", "EBCategoryScrollFrame", categoriesTab, "UIPanelScrollFrameTemplate")
     catScrollFrame:SetPoint("TOPLEFT", 4, -4)
-    catScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    catScrollFrame:SetPoint("BOTTOMRIGHT", -24, 45)
     
     frame.catContainer = CreateFrame("Frame", nil, catScrollFrame)
     frame.catContainer:SetSize(255, 1)
@@ -580,7 +580,7 @@ local function CreateConfigPanel()
     
     local invScrollFrame = CreateFrame("ScrollFrame", "EBInventoryScrollFrame", inventoryTab, "UIPanelScrollFrameTemplate")
     invScrollFrame:SetPoint("TOPLEFT", 4, -24)
-    invScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    invScrollFrame:SetPoint("BOTTOMRIGHT", -24, 45)
     
     frame.invContainer = CreateFrame("Frame", nil, invScrollFrame)
     frame.invContainer:SetSize(255, 1)
@@ -597,7 +597,7 @@ local function CreateConfigPanel()
     
     local orderScrollFrame = CreateFrame("ScrollFrame", "EBOrderScrollFrame", orderTab, "UIPanelScrollFrameTemplate")
     orderScrollFrame:SetPoint("TOPLEFT", 4, -24)
-    orderScrollFrame:SetPoint("BOTTOMRIGHT", -24, 4)
+    orderScrollFrame:SetPoint("BOTTOMRIGHT", -24, 45)
     
     frame.orderContainer = CreateFrame("Frame", nil, orderScrollFrame)
     frame.orderContainer:SetSize(255, 1)
