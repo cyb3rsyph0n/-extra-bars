@@ -279,6 +279,11 @@ local function CreateConfigPanel()
     -- X Position
     frame.xPosContainer = CreateSlider(frame.settingsFrame, "EBXPosSlider", "X Position", -2000, 2000, 1, 120)
     frame.xPosContainer:SetPoint("TOPLEFT", 20, settingsY)
+    frame.xPosContainer.slider:EnableMouseWheel(true)
+    frame.xPosContainer.slider:SetScript("OnMouseWheel", function(self, delta)
+        local value = self:GetValue() + delta
+        self:SetValue(value)
+    end)
     frame.xPosContainer.slider:SetScript("OnValueChanged", function(self, value)
         value = math.floor(value)
         self.valueText:SetText(value)
@@ -295,6 +300,11 @@ local function CreateConfigPanel()
     -- Y Position
     frame.yPosContainer = CreateSlider(frame.settingsFrame, "EBYPosSlider", "Y Position", -2000, 2000, 1, 120)
     frame.yPosContainer:SetPoint("TOPLEFT", 160, settingsY)
+    frame.yPosContainer.slider:EnableMouseWheel(true)
+    frame.yPosContainer.slider:SetScript("OnMouseWheel", function(self, delta)
+        local value = self:GetValue() + delta
+        self:SetValue(value)
+    end)
     frame.yPosContainer.slider:SetScript("OnValueChanged", function(self, value)
         value = math.floor(value)
         self.valueText:SetText(value)
