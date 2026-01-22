@@ -503,28 +503,6 @@ local function CreateConfigPanel()
         catBtn.label:SetPoint("LEFT", catBtn.check, "RIGHT", 2, 0)
         catBtn.label:SetText(catData.name)
         
-        -- Up arrow button
-        catBtn.upBtn = CreateFrame("Button", nil, catBtn)
-        catBtn.upBtn:SetSize(14, 14)
-        catBtn.upBtn:SetPoint("RIGHT", -20, 0)
-        catBtn.upBtn:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up")
-        catBtn.upBtn:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Down")
-        catBtn.upBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Highlight")
-        catBtn.upBtn:SetScript("OnClick", function()
-            ExtraBars:MoveCategoryInOrder(catKey, -1)
-        end)
-        
-        -- Down arrow button
-        catBtn.downBtn = CreateFrame("Button", nil, catBtn)
-        catBtn.downBtn:SetSize(14, 14)
-        catBtn.downBtn:SetPoint("RIGHT", -4, 0)
-        catBtn.downBtn:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up")
-        catBtn.downBtn:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Down")
-        catBtn.downBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Highlight")
-        catBtn.downBtn:SetScript("OnClick", function()
-            ExtraBars:MoveCategoryInOrder(catKey, 1)
-        end)
-        
         catBtn.check:SetScript("OnClick", function(self)
             local barID = ExtraBars.selectedBarID
             if not barID or not ExtraBars.db.bars[barID] then return end
@@ -1230,42 +1208,17 @@ function ExtraBars:UpdateConfigPanel()
     local currentStrata = barData.strata or "MEDIUM"
     UIDropDownMenu_SetText(panel.strataDropdown, strataLabels[currentStrata] or "Medium")
     
-    -- Update category checkboxes and arrow button visibility
+    -- Update category checkboxes
     for catKey, btn in pairs(panel.categoryButtons) do
         local isChecked = false
-        local orderIndex = nil
         for i, cat in ipairs(barData.categories) do
             if cat == catKey then
                 isChecked = true
-                orderIndex = i
                 break
             end
         end
         
         btn.check:SetChecked(isChecked)
-        
-        -- Show/hide and enable/disable arrow buttons based on selection and position
-        if isChecked and orderIndex then
-            btn.upBtn:Show()
-            btn.downBtn:Show()
-            -- Disable up if first, disable down if last
-            btn.upBtn:SetEnabled(orderIndex > 1)
-            btn.downBtn:SetEnabled(orderIndex < #barData.categories)
-            -- Visual feedback for disabled state
-            if orderIndex <= 1 then
-                btn.upBtn:SetAlpha(0.3)
-            else
-                btn.upBtn:SetAlpha(1)
-            end
-            if orderIndex >= #barData.categories then
-                btn.downBtn:SetAlpha(0.3)
-            else
-                btn.downBtn:SetAlpha(1)
-            end
-        else
-            btn.upBtn:Hide()
-            btn.downBtn:Hide()
-        end
     end
     
     -- Refresh inventory and order tabs if visible
